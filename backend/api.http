@@ -1,0 +1,16 @@
+### 
+GET http://localhost:8080/
+Accept: application/json
+
+###
+GET http://localhost:8080/pictures/
+Accept: application/json
+
+###
+POST http://localhost:8080/pictures/
+Accept: application/json
+
+{
+	"title": "helloworld",
+    "uid": 3
+}
