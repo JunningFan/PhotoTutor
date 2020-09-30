@@ -8,13 +8,15 @@ import (
 
 type Picture struct {
 	gorm.Model
-	Title string
-	User  User
+	Title  string
+	UserID uint `json:"-"`
+	User   User
 	//Uid uint
-	Img      string `json:"-"`
-	Lng      float64
-	Lat      float64
-	Location Location
+	Img        string `json:"-"`
+	Lng        float64
+	Lat        float64
+	LocationID uint `json:"-"`
+	Location   Location
 	//Lid uint
 	ImgSmall string `gorm:"-"`
 	ImgBig   string `gorm:"-"`
@@ -43,7 +45,7 @@ func NewPictureManager() PictureManager {
 
 func (p PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Debug().Find(&pictures)
+	res := conn.Debug().Preload("User").Preload("Location").Find(&pictures)
 
 	return pictures, res.Error
 }
@@ -64,12 +66,12 @@ func (p PictureManager) Insert(input *PictureInput) (Picture, error) {
 	}
 	pic := Picture{
 		Title:    input.Title,
-		User:     User{ID: input.Uid},
+		UserID:   input.Uid,
 		Img:      picName,
 		Lng:      input.Lng,
 		Lat:      input.Lat,
 		Location: input.Location,
 	}
-	res := conn.Create(&pic)
+	res := conn.Preload("User").Create(&pic)
 	return pic, res.Error
 }

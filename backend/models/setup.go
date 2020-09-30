@@ -16,8 +16,5 @@ func Setup() {
 	conn = database.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	database.AutoMigrate(&User{})
-	database.AutoMigrate(&Img{})
-	database.AutoMigrate(&Location{})
-	database.AutoMigrate(&Picture{})
+	database.AutoMigrate(&User{}, &Img{}, &Location{}, &Picture{})
 }

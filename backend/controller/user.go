@@ -73,9 +73,19 @@ func (p *UserController) register(ctx *gin.Context) {
 		return
 	} else if user, err := p.userManager.Create(&input); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else if tokenStr, err := getJwtString(user); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		ctx.JSON(http.StatusOK, gin.H{"user": user, "token": tokenStr})
 	}
+}
+
+func getJwtString(user models.User) (string, error) {
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, JwtClaims{
+		ID:     user.ID,
+		Expire: time.Now().Add(time.Minute * 20).Unix()})
+	return token.SignedString([]byte(util.SecretKey))
 }
 
 func (uc *UserController) login(ctx *gin.Context) {
@@ -91,10 +101,7 @@ func (uc *UserController) login(ctx *gin.Context) {
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, JwtClaims{
-		ID:     user.ID,
-		Expire: time.Now().Add(time.Minute * 20).Unix()})
-	if tokenStr, err := token.SignedString([]byte(util.SecretKey)); err != nil {
+	if tokenStr, err := getJwtString(user); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"user": user, "token": tokenStr})
