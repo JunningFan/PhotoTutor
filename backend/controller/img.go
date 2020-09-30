@@ -3,7 +3,12 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/nfnt/resize"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -20,10 +25,57 @@ func NewImgController(srvr *gin.RouterGroup) ImgController {
 	srvr.POST("upload/", RequrieAuth(res.upload))
 	return res
 }
-func checkSuffix(suffix string) bool {
-	suffix = strings.ToLower(suffix)
+func checkSuffix(suffix *string) bool {
+	*suffix = strings.ToLower(*suffix)
 	// TODO: more on the types
-	return suffix == "jpg" || suffix == "png"
+	return *suffix == "jpg" || *suffix == "png"
+}
+
+func (i *ImgController) mkThumbnail(path string, imgType string) {
+	img, err := getBigImgByName(path, imgType)
+	if err != nil {
+		return
+	}
+	thImg := resize.Thumbnail(512, 512, img, resize.Bilinear)
+	putSmallImgByImg(thImg, path, imgType)
+}
+
+func putSmallImgByImg(img image.Image, imgName string, imgType string) {
+	out, err := os.Create(path.Join(util.ImgSmallPath, imgName))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	if imgType == "jpg" || imgType == "jpeg" {
+		jpeg.Encode(out, img, nil)
+	} else if imgType == "png" {
+		png.Encode(out, img)
+	}
+}
+
+func getBigImgByName(imgName string, imgType string) (image.Image, error) {
+	var empty image.Image
+	file, err := os.Open(path.Join(util.ImgBigPath, imgName))
+	if err != nil {
+		return empty, err
+	}
+	if imgType == "jpg" {
+		if ret, err := jpeg.Decode(file); err != nil {
+			return empty, err
+		} else {
+			return ret, nil
+		}
+
+	} else if imgType == "png" {
+		if ret, err := png.Decode(file); err != nil {
+			return empty, err
+		} else {
+			return ret, err
+		}
+	}
+	return empty, nil
 }
 
 func (c *ImgController) upload(uid uint, ctx *gin.Context) {
@@ -34,22 +86,29 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 	}
 	originalName := header.Filename
 	originNameArr := strings.Split(originalName, ".")
-	imgId := models.AllocImgId(uid)
+
 	suffix := originNameArr[len(originNameArr)-1]
-	if len(originNameArr) < 2 || !checkSuffix(suffix) {
+	if len(originNameArr) < 2 || !checkSuffix(&suffix) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": fmt.Sprintf("filetype is not suported for '%v'", originalName)})
 		return
 	}
-	imgName := fmt.Sprintf("%d.%s", imgId, suffix)
+	var imgId uint
 	var out *os.File
+
+	imgId, err = models.AllocImgId(uid, suffix)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	imgName := fmt.Sprintf("%d.%s", imgId, suffix)
 	out, err = os.Create(path.Join(util.ImgBigPath, imgName))
+	defer out.Close()
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("creat fileReader failed %s", err.Error())})
 		return
 	}
-	defer out.Close()
 	_, err = io.Copy(out, fileReader)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -57,7 +116,8 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 		return
 	}
 
-	//	TODO: generate thumbnail import "github.com/nfnt/resize"
 	ctx.JSON(http.StatusOK, gin.H{"img": imgId})
+	// generate thumbnail import "github.com/nfnt/resize"
+	c.mkThumbnail(imgName, suffix)
 
 }

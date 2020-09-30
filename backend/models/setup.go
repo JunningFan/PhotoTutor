@@ -13,10 +13,11 @@ func Setup() {
 	if err != nil {
 		panic("Failed to connect to database!")
 	}
-	conn = database
+	conn = database.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	database.AutoMigrate(&Picture{})
 	database.AutoMigrate(&User{})
 	database.AutoMigrate(&Img{})
+	database.AutoMigrate(&Location{})
+	database.AutoMigrate(&Picture{})
 }

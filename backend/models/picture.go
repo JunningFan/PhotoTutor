@@ -8,26 +8,30 @@ import (
 
 type Picture struct {
 	gorm.Model
-	Title    string
-	User     User
-	Img      uint `json:"-"`
+	Title string
+	User  User
+	//Uid uint
+	Img      string `json:"-"`
 	Lng      float64
 	Lat      float64
+	Location Location
+	//Lid uint
 	ImgSmall string `gorm:"-"`
 	ImgBig   string `gorm:"-"`
 }
 
 type PictureInput struct {
-	Title string  `binding:"required"`
-	Uid   uint    // inject after login
-	Lng   float64 `binding:"required"`
-	Lat   float64 `binding:"required"`
-	Img   uint    `binding:"required"`
+	Title    string  `binding:"required"`
+	Uid      uint    // inject after login
+	Lng      float64 `binding:"required"`
+	Lat      float64 `binding:"required"`
+	Location Location
+	Img      uint `binding:"required"`
 }
 
 func (p *Picture) AfterFind(_ *gorm.DB) (err error) {
-	p.ImgBig = fmt.Sprintf("%s%v", util.ImgBigPath, p.Img)
-	p.ImgSmall = fmt.Sprintf("%s%v", util.ImgSmallPath, p.Img)
+	p.ImgBig = fmt.Sprintf("%s%s", util.ImgBigPath, p.Img)
+	p.ImgSmall = fmt.Sprintf("%s%s", util.ImgSmallPath, p.Img)
 	return
 }
 
@@ -39,12 +43,33 @@ func NewPictureManager() PictureManager {
 
 func (p PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Find(&pictures)
+	res := conn.Debug().Find(&pictures)
+
 	return pictures, res.Error
 }
 
 func (p PictureManager) Insert(input *PictureInput) (Picture, error) {
-	pic := Picture{Title: input.Title, Img: input.Img, Lng: input.Lng, Lat: input.Lat, User: User{ID: input.Uid}}
-	res := conn.Create(&pic).Find(&pic)
+	var img Img
+	imgDb := conn.First(&img, input.Img)
+	if imgDb.Error != nil {
+		return Picture{}, fmt.Errorf("img %v is not exist", input.Img)
+	}
+	picName, err := img.GetImgFileName(input.Uid)
+	if err != nil {
+		return Picture{}, err
+	}
+
+	if err := GetLocation(&input.Location); err != nil {
+		return Picture{}, err
+	}
+	pic := Picture{
+		Title:    input.Title,
+		User:     User{ID: input.Uid},
+		Img:      picName,
+		Lng:      input.Lng,
+		Lat:      input.Lat,
+		Location: input.Location,
+	}
+	res := conn.Create(&pic)
 	return pic, res.Error
 }
