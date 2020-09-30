@@ -17,5 +17,6 @@ func Setup() {
 
 	//register objects
 	database.AutoMigrate(&Picture{})
+	database.AutoMigrate(&User{})
 
 }

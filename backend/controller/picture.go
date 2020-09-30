@@ -13,7 +13,7 @@ type PictureController struct {
 func NewPictureController(srvr *gin.RouterGroup) PictureController {
 	res := PictureController{models.NewPictureManager()}
 
-	srvr.GET("", res.getAll)
+	srvr.GET("/", res.getAll)
 	srvr.POST("", res.insert)
 	return res
 }

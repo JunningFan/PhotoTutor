@@ -15,6 +15,9 @@ func main() {
 	})
 
 	controller.NewPictureController(r.Group("/pictures/"))
+	controller.NewUserController(r.Group("/users/"))
 	err := r.Run()
-	println(err.Error())
+	if err != nil {
+		println(err.Error())
+	}
 }
