@@ -14,7 +14,7 @@ func NewPictureController(srvr *gin.RouterGroup) PictureController {
 	res := PictureController{models.NewPictureManager()}
 
 	srvr.GET("/", res.getAll)
-	srvr.POST("", res.insert)
+	srvr.POST("", RequrieAuth(res.insert))
 	return res
 }
 
@@ -26,8 +26,8 @@ func (p PictureController) getAll(ctx *gin.Context) {
 	}
 }
 
-func (p PictureController) insert(ctx *gin.Context) {
-	var input models.PictureInput
+func (p PictureController) insert(uid uint, ctx *gin.Context) {
+	input := models.PictureInput{Uid: uid}
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else if pic, err := p.pictureManager.Insert(&input); err != nil {

@@ -1,25 +1,33 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"fmt"
+	"github.com/jinzhu/gorm"
+	"phototutor/backend/util"
+)
 
 type Picture struct {
 	gorm.Model
 	Title    string
-	Uid      uint
-	img      uint
+	User     User
+	Img      uint `json:"-"`
+	Lng      float64
+	Lat      float64
 	ImgSmall string `gorm:"-"`
 	ImgBig   string `gorm:"-"`
 }
 
 type PictureInput struct {
-	Title string `json:"title"`
-	Uid   uint   `json:"uid"`
-	Img   uint   `json:"img"`
+	Title string  `binding:"required"`
+	Uid   uint    // inject after login
+	Lng   float64 `binding:"required"`
+	Lat   float64 `binding:"required"`
+	Img   uint    `binding:"required"`
 }
 
 func (p *Picture) AfterFind(_ *gorm.DB) (err error) {
-	p.ImgBig = "/Some/prefix/" + string(p.img)
-	p.ImgSmall = "/Some/prefix/small/" + string(p.img)
+	p.ImgBig = fmt.Sprintf("%s%v", util.ImgBigPath, p.Img)
+	p.ImgSmall = fmt.Sprintf("%s%v", util.ImgSmallPath, p.Img)
 	return
 }
 
@@ -36,7 +44,7 @@ func (p PictureManager) All() ([]Picture, error) {
 }
 
 func (p PictureManager) Insert(input *PictureInput) (Picture, error) {
-	pic := Picture{Title: input.Title, Uid: input.Uid}
-	res := conn.Create(&pic).Find(&input)
+	pic := Picture{Title: input.Title, Img: input.Img, Lng: input.Lng, Lat: input.Lat, User: User{ID: input.Uid}}
+	res := conn.Create(&pic).Find(&pic)
 	return pic, res.Error
 }

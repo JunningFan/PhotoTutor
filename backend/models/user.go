@@ -2,14 +2,17 @@ package models
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type User struct {
-	gorm.Model
-	Username  string `gorm:"unique"`
-	Password  string `json:"-"`
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
+	Username  string     `gorm:"unique"`
+	Password  string     `json:"-"`
 	Nickname  string
 	Signature string
 	Img       uint   `json:"-"`
@@ -33,9 +36,9 @@ type UserChangePasswordInput struct {
 }
 
 type UserUpdateInput struct {
-	Nickname  string
-	Signature string
-	Img       uint
+	Nickname  string `binding:"required"`
+	Signature string `binding:"required"`
+	Img       uint   `binding:"required"`
 }
 
 type UserManager struct{}

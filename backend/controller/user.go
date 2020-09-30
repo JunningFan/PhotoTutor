@@ -17,11 +17,11 @@ type UserController struct {
 // for jwt token
 type JwtClaims struct {
 	ID     uint
-	expire int64
+	Expire int64
 }
 
 func (c JwtClaims) Valid() error {
-	if c.expire > time.Now().Unix() {
+	if time.Now().Unix() > c.Expire || c.Expire == 0 {
 		return fmt.Errorf("auth token is expred")
 	}
 	return nil
@@ -41,6 +41,10 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		tokenStr := context.GetHeader("Authorization")
+		if len(tokenStr) == 0 {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "login required"})
+			return
+		}
 		token, err := jwt.ParseWithClaims(tokenStr, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(util.SecretKey), nil
 		})
@@ -89,7 +93,7 @@ func (uc *UserController) login(ctx *gin.Context) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, JwtClaims{
 		ID:     user.ID,
-		expire: time.Now().Add(time.Minute * 20).Unix()})
+		Expire: time.Now().Add(time.Minute * 20).Unix()})
 	if tokenStr, err := token.SignedString([]byte(util.SecretKey)); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
