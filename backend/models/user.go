@@ -89,6 +89,10 @@ func (um *UserManager) Login(input *UserLoginInput) (User, error) {
 }
 
 func (um *UserManager) GetCurUser(uid uint) (User, error) {
+	return GetUserByID(uid)
+}
+
+func GetUserByID(uid uint) (User, error) {
 	var ret User
 	res := conn.First(&ret, uid)
 	return ret, res.Error

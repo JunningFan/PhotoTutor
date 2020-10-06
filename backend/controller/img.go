@@ -43,15 +43,18 @@ func (i *ImgController) mkThumbnail(path string, imgType string) {
 func putSmallImgByImg(img image.Image, imgName string, imgType string) {
 	out, err := os.Create(path.Join(util.ImgSmallPath, imgName))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err.Error())
 	}
 	defer out.Close()
 
 	// write new image to file
 	if imgType == "jpg" || imgType == "jpeg" {
-		jpeg.Encode(out, img, nil)
+		err = jpeg.Encode(out, img, nil)
 	} else if imgType == "png" {
-		png.Encode(out, img)
+		err = png.Encode(out, img)
+	}
+	if err != nil {
+		log.Println(err.Error())
 	}
 }
 
@@ -118,6 +121,5 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"img": imgId})
 	// generate thumbnail import "github.com/nfnt/resize"
-	c.mkThumbnail(imgName, suffix)
-
+	go c.mkThumbnail(imgName, suffix)
 }

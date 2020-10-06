@@ -23,8 +23,9 @@ type Picture struct {
 }
 
 type PictureInput struct {
-	Title    string  `binding:"required"`
-	Uid      uint    // inject after login
+	Title    string `binding:"required"`
+	Uid      uint   `json:"-"` // inject after login
+	User     User
 	Lng      float64 `binding:"required"`
 	Lat      float64 `binding:"required"`
 	Location Location
@@ -72,6 +73,7 @@ func (p PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Lat:      input.Lat,
 		Location: input.Location,
 	}
-	res := conn.Preload("User").Create(&pic)
+	res := conn.Create(&pic)
+
 	return pic, res.Error
 }
