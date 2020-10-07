@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/unrolled/secure"
 	"net/http"
 	"os"
 	"phototutor/backend/controller"
 	"phototutor/backend/models"
 	"phototutor/backend/util"
+
+	"github.com/gin-gonic/gin"
+	"github.com/unrolled/secure"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 	os.MkdirAll(util.ImgBigPath, os.ModePerm)
 
 	server := gin.Default()
-	server.Use(TlsHandler())
+	// server.Use(TlsHandler())
 
 	server.Static("img/", util.ImgStaticPrefix)
 	models.Setup()
@@ -28,9 +29,9 @@ func main() {
 		controller.NewImgController(picRoute)
 	}
 	controller.NewUserController(server.Group("/users/"))
-	//err := server.Run()
+	err := server.Run()
 	//running in tls
-	err := server.RunTLS(":8080", "ssl/rootCA.pem", "ssl/rootCA.key")
+	// err := server.RunTLS(":8080", "ssl/rootCA.pem", "ssl/rootCA.key")
 	if err != nil {
 		println(err.Error())
 	}
