@@ -8,7 +8,6 @@ import (
 	"phototutor/backend/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/unrolled/secure"
 )
 
 func main() {
@@ -37,19 +36,19 @@ func main() {
 	}
 }
 
-func TlsHandler() gin.HandlerFunc {
-	secureMiddleware := secure.New(secure.Options{
-		SSLRedirect: true,
-		SSLHost:     "127.0.0.1:8080",
-	})
-	return func(c *gin.Context) {
-		err := secureMiddleware.Process(c.Writer, c.Request)
+// func TlsHandler() gin.HandlerFunc {
+// 	secureMiddleware := secure.New(secure.Options{
+// 		SSLRedirect: true,
+// 		SSLHost:     "127.0.0.1:8080",
+// 	})
+// 	return func(c *gin.Context) {
+// 		err := secureMiddleware.Process(c.Writer, c.Request)
 
-		// If there was an error, do not continue.
-		if err != nil {
-			return
-		}
+// 		// If there was an error, do not continue.
+// 		if err != nil {
+// 			return
+// 		}
 
-		c.Next()
-	}
-}
+// 		c.Next()
+// 	}
+// }
