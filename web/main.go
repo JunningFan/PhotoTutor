@@ -10,15 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+func setUpEnv() {
 	os.MkdirAll(util.ImgSmallPath, os.ModePerm)
 	os.MkdirAll(util.ImgBigPath, os.ModePerm)
+	util.SetUp()
+	models.Setup()
+}
+
+func main() {
+	setUpEnv()
 
 	server := gin.Default()
 	// server.Use(TlsHandler())
 
 	server.Static("img/", util.ImgStaticPrefix)
-	models.Setup()
+
 	server.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"data": "hello world"})
 	})

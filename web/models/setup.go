@@ -1,20 +1,32 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"fmt"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"phototutor/backend/util"
 )
 
 var conn *gorm.DB
 
 func Setup() {
-	database, err := gorm.Open("sqlite3", "test.db")
-
-	if err != nil {
-		panic("Failed to connect to database!")
+	var err error
+	if util.DB_DSN == "" {
+		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	} else {
+		//	only support postgres connection
+		conn, err = gorm.Open(postgres.Open(util.DB_DSN), &gorm.Config{})
 	}
-	conn = database.LogMode(true).Set("gorm:auto_preload", true)
+	if err != nil {
+		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
+	}
+	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	database.AutoMigrate(&User{}, &Img{}, &Location{}, &Picture{})
+	err = conn.AutoMigrate(&User{}, &Img{}, &Location{}, &Picture{})
+	if err != nil {
+		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
+	}
+	//println("Finish set up databse conn dsn ", util.DB_DSN)
 }

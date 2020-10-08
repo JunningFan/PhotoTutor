@@ -24,7 +24,7 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiRXhwaXJlIjoxNjAx
 }
 
 ### Reigster
-POST https://localhost:8080/users/
+POST http://localhost:8080/users/
 Accept: application/json
 
 {
