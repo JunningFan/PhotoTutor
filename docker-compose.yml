@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=apple123
+      # - POSTGRES_USER=root
+    # ports:
+    #   - 5432:5432
+    volumes:
+      - ./db/:/var/lib/postgresql/data
+  web:
+    build: web
+    restart: always
+    environment:
+      - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
+    depends_on:
+      - db
+    ports:
+      - 8080:8080
+    volumes:
+      - ./img/:/root/app/img
+
+    # restart: always
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8081:8080
+  # nginx:
+  #   build: .
+  #   restart: always
+  #   ports:
+  #     - 80:80

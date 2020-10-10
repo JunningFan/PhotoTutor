@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
+	"phototutor/backend/util"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"phototutor/backend/util"
 )
 
 var conn *gorm.DB
@@ -15,6 +16,7 @@ func Setup() {
 	if util.DB_DSN == "" {
 		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	} else {
+		fmt.Println(util.DB_DSN)
 		//	only support postgres connection
 		conn, err = gorm.Open(postgres.Open(util.DB_DSN), &gorm.Config{})
 	}
