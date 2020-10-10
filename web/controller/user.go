@@ -31,6 +31,7 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 
 	//srvr.GET("", RequrieAuth(res.getCurrUser))
 	srvr.POST("", res.register)
+	srvr.PUT("", RequrieAuth(res.update))
 	srvr.POST("login/", res.login)
 	srvr.GET("", RequrieAuth(res.getCurrUser))
 	return res
@@ -77,6 +78,18 @@ func (p *UserController) register(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"user": user, "token": tokenStr})
+	}
+}
+
+func (p *UserController) update(uid uint, ctx *gin.Context) {
+	var input models.UserUpdateInput
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else if user, err := p.userManager.Update(uid, input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, user)
 	}
 }
 

@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"path"
+	"phototutor/backend/util"
 	"time"
 )
 
@@ -98,6 +100,25 @@ func GetUserByID(uid uint) (User, error) {
 	return ret, res.Error
 }
 
-//func (um *UserManager) Update(user *User, input UserUpdateInput) {
-//
-//}
+func (um *UserManager) Update(uid uint,  input UserUpdateInput) (User, error) {
+	user:= User{}
+	img:= Img{}
+	if res:= conn.Find(&user, uid); res.Error != nil {
+		return User{}, res.Error
+	} else if res := conn.First(&img, input.Img) ; res.Error != nil {
+		return User{}, res.Error
+	} else if imgPath, err:= img.GetImgFileName(uid); err != nil  {
+		return User{}, err
+	} else {
+		user.Nickname = input.Nickname
+		user.Signature = input.Signature
+		user.Img = input.Img
+		user.ImgLoc = path.Join(util.ImgSmallPath,imgPath)
+
+		if res := conn.Save(&user); res.Error != nil {
+			return User{}, res.Error
+		} else {
+			return user, nil
+		}
+	}
+}

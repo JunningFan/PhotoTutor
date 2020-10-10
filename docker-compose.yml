@@ -22,6 +22,13 @@ services:
       - 8080:8080
     volumes:
       - ./img/:/root/app/img
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
 
     # restart: always
   # adminer:
