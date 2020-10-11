@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"phototutor/backend/models"
+	"strconv"
 )
 
 type PictureController struct {
@@ -13,11 +14,22 @@ type PictureController struct {
 func NewPictureController(srvr *gin.RouterGroup) PictureController {
 	res := PictureController{models.NewPictureManager()}
 
-	srvr.GET("/", res.getAll)
+	srvr.GET("", res.getAll)
 	srvr.POST("", RequrieAuth(res.insert))
+	srvr.GET(":id", res.getOne)
 	return res
 }
+func (p *PictureController) getOne(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if idNum,err:= strconv.ParseUint(id,10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
+	} else if pic, err:= p.pictureManager.One(uint(idNum)); err != nil{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else{
+		ctx.JSON(http.StatusOK,pic)
+	}
 
+}
 func (p PictureController) getAll(ctx *gin.Context) {
 	if data, err := p.pictureManager.All(); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
