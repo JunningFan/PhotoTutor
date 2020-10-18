@@ -34,44 +34,6 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiRXhwaXJlIjoxNjAz
     "Elevation": 123.43
 }
 
-### Reigster
-POST http://localhost:8080/users/
-Accept: application/json
-
-{
-	"username": "ttt1",
-    "password": "apple123",
-    "nickname": "apple"
-}
-
-### Update detail
-PUT http://localhost:8080/users/
-Accept: application/json
-Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiRXhwaXJlIjoxNjAyMzQ3Njg0fQ.Q4cJcAuseTlkG57BNVTfI79kTL4frK1KUg5xUfmVf7bgUVfzZoXds-yYTA-2nKHLsWUU0rWSn-oO84C-TITV0Q
-
-{
-	"Nickname": "Tecty",
-    "Signature": "I am a good photographer, contact me with wechat: myTecty",
-    "Img": 1
-}
-
-
-
-### Login
-POST http://localhost:8080/users/login/
-Accept: application/json
-
-{
-	"username": "ttt1",
-    "password": "apple123"
-}
-
-
-### Check info
-GET http://localhost:8080/users/
-Accept: application/json
-Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiRXhwaXJlIjoxNjAxNDk3MjgzfQ.1d-W41mlk1pr4DFvS8-OaGkVYTydsdDArYAxc-Y5CewE0egbZJkqXM7dFSKLiYrfHxL8rJf5dlpBnh2vsXccbA
-
 
 ### Upload photo
 POST http://localhost:8080/pictures/upload/ HTTP/1.1

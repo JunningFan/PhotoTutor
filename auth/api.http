@@ -1,0 +1,52 @@
+@baseUrl =http://localhost:8080/
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDMwNDMwMjl9.jmzo5o94NZv9FZvsTV17jiJEvxLt5krzbPZ9CEVkWmDTn7UijqyzwmqrX18QcZri1B_LOj6QaQeCe_R3hNvyzw
+
+### Get user detail 
+GET {{baseUrl}}1
+Accept: application/json
+
+### Reigster
+POST {{baseUrl}}
+Accept: application/json
+
+{
+	"username": "ttt1",
+    "password": "apple123",
+    "nickname": "apple"
+}
+
+
+### Login
+POST {{baseUrl}}login/
+Accept: application/json
+
+{
+	"username": "ttt1",
+    "password": "apple123"
+}
+
+### Check info
+GET {{baseUrl}}
+Accept: application/json
+Authorization: {{token}}
+
+
+### Update detail
+PUT {{baseUrl}}
+Accept: application/json
+Authorization: {{token}}
+
+{
+	"Nickname": "Tecty",
+    "Signature": "I am a good photographer, contact me with wechat: myTecty",
+    "Img": 1
+}
+
+### Refresh Token 
+POST {{baseUrl}}refresh/
+Accept: application/json
+
+{
+    "Refresh": "{{token}}"
+}
+
