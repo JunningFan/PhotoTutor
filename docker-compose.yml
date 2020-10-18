@@ -16,6 +16,7 @@ services:
     restart: always
     environment:
       - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
+      - ELS_BASE=http://elastic:9200/
     depends_on:
       - db
     ports:
@@ -25,8 +26,8 @@ services:
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
     ports:
-      - 9200:9200
-      - 9300:9300
+      - 8081:9200
+      # - 9300:9300
     environment:
       - discovery.type=single-node
 

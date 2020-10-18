@@ -2,8 +2,9 @@ package models
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"phototutor/backend/util"
+	"github.com/mmcloughlin/geohash"
+	"gorm.io/gorm"
 )
 
 type Picture struct {
@@ -17,10 +18,19 @@ type Picture struct {
 	Lat        float64
 	LocationID uint `json:"-"`
 	Location   Location
+	GeoHash    string // for elastic search
+
+	Iso          uint
+	FocalLength  uint
+	Aperture     float64
+	ShutterSpeed float64
+	Timestamp    uint
+	Orientation  float64
+	Elevation    float64
 
 	// fill while creating the picture obj
 	Height uint
-	Width uint
+	Width  uint
 
 	//Lid uint Fill by system
 	ImgSmall string `gorm:"-"`
@@ -28,11 +38,19 @@ type Picture struct {
 }
 
 type PictureInput struct {
-	Title    string `binding:"required"`
-	Uid      uint   `json:"-"` // inject after login
-	User     User
-	Lng      float64 `binding:"required"`
-	Lat      float64 `binding:"required"`
+	Title        string `binding:"required"`
+	Uid          uint   `json:"-"` // inject after login
+	User         User
+	Lng          float64 `binding:"required"`
+	Lat          float64 `binding:"required"`
+	Iso          uint
+	FocalLength  uint
+	Aperture     float64
+	ShutterSpeed float64
+	Timestamp    uint
+	Orientation  float64
+	Elevation    float64
+
 	Location Location
 	Img      uint `binding:"required"`
 }
@@ -66,7 +84,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	if err != nil {
 		return Picture{}, err
 	}
-	picHeight, picWidth, err:= img.getResloution()
+	picHeight, picWidth, err := img.getResloution()
 	if err != nil {
 		return Picture{}, err
 	}
@@ -78,12 +96,21 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Title:    input.Title,
 		UserID:   input.Uid,
 		Img:      picName,
-		Height: picHeight,
-		Width: picWidth,
-
+		Height:   picHeight,
+		Width:    picWidth,
 		Lng:      input.Lng,
 		Lat:      input.Lat,
 		Location: input.Location,
+		GeoHash: geohash.Encode(input.Lat, input.Lng),
+
+		// specified keywords
+		Iso:          input.Iso,
+		FocalLength:  input.FocalLength,
+		Aperture:     input.Aperture,
+		ShutterSpeed: input.ShutterSpeed,
+		Timestamp:    input.Timestamp,
+		Orientation:  input.Orientation,
+		Elevation:    input.Elevation,
 	}
 	res := conn.Preload("User").Create(&pic).Find(&pic)
 
@@ -91,7 +118,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 }
 
 func (p *PictureManager) One(pid uint) (Picture, error) {
-	var picture Picture;
-	res := conn.Debug().Preload("User").Preload("Location").Find(&picture, pid);
+	var picture Picture
+	res := conn.Debug().Preload("User").Preload("Location").Find(&picture, pid)
 	return picture, res.Error
 }

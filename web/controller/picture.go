@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"phototutor/backend/elsClient"
 	"phototutor/backend/models"
 	"strconv"
 )
@@ -50,6 +52,7 @@ func (p PictureController) insert(uid uint, ctx *gin.Context) {
 	} else if pic, err := p.pictureManager.Insert(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
+		go elsClient.PutElsObj(fmt.Sprintf("picture/_doc/%d",pic.ID),pic)
 		ctx.JSON(http.StatusOK, pic)
 	}
 }

@@ -8,7 +8,12 @@ var ImgSmallPath = ImgStaticPrefix + "small/"
 var ImgBigPath = ImgStaticPrefix + "big/"
 
 var DB_DSN string
+var ELS_BASE string
 
 func SetUp() {
 	DB_DSN = os.Getenv("DB_DSN")
+	ELS_BASE = os.Getenv("ELS_BASE")
+	if ELS_BASE == "" {
+		ELS_BASE = "http://localhost:9200/"
+	}
 }

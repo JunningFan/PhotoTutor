@@ -1,0 +1,66 @@
+@baseUrl=http://localhost:9200
+
+PUT  {{baseUrl}}/picture/_doc/7
+Content-Type: application/json
+
+{
+  "ID": 7,
+  "CreatedAt": "2020-10-18T14:32:26.986438677+08:00",
+  "UpdatedAt": "2020-10-18T14:32:26.986438677+08:00",
+  "DeletedAt": {
+    "Time": "0001-01-01T00:00:00Z",
+    "Valid": false
+  },
+  "Title": "world is better",
+  "User": {
+    "ID": 1,
+    "CreatedAt": "2020-10-10T23:13:05.404430555+08:00",
+    "UpdatedAt": "2020-10-11T00:16:17.88964163+08:00",
+    "DeletedAt": null,
+    "Username": "ttt1",
+    "Nickname": "Tecty",
+    "Signature": "I am a good photographer, contact me with wechat: myTecty",
+    "img": ""
+  },
+  "Lng": 1.22,
+  "Lat": 3.44,
+  "Location": {
+    "Country": "Australia",
+    "State": "NSW",
+    "City": "Sydney"
+  },
+  "Iso": 400,
+  "FocalLength": 2,
+  "Aperture": 2.5,
+  "ShutterSpeed": 0.24,
+  "Timestamp": 2147483647,
+  "Orientation": 24,
+  "Elevation": 123.43,
+  "Height": 101,
+  "Width": 436,
+  "ImgSmall": "img/small/1.png",
+  "ImgBig": "img/big/1.png"
+}
+
+### 
+GET {{baseUrl}}/picture/_search
+Content-Type: application/json
+
+### fetch document 
+GET  {{baseUrl}}/picture/_doc/8
+
+
+### math query 
+GET {{baseUrl}}/picture/_search
+Content-Type: application/json
+
+{  
+    "query":{  
+    "multi_match":{  
+        "query":"Tecty terms",
+        "fields":[  
+           "Title", "User.Nickname", "User.Username"
+        ]
+    }
+   }
+}
