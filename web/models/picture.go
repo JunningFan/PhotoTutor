@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"phototutor/backend/util"
+
 	"github.com/mmcloughlin/geohash"
 	"gorm.io/gorm"
 )
@@ -101,7 +102,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Lng:      input.Lng,
 		Lat:      input.Lat,
 		Location: input.Location,
-		GeoHash: geohash.Encode(input.Lat, input.Lng),
+		GeoHash:  geohash.Encode(input.Lat, input.Lng),
 
 		// specified keywords
 		Iso:          input.Iso,
@@ -117,8 +118,9 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	return pic, res.Error
 }
 
+// One Find the one picture
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
-	res := conn.Debug().Preload("User").Preload("Location").Find(&picture, pid)
+	res := conn.Debug().Preload("User").Preload("Location").First(&picture, pid)
 	return picture, res.Error
 }

@@ -6,11 +6,25 @@ services:
     restart: always
     environment:
       - POSTGRES_PASSWORD=apple123
-      # - POSTGRES_USER=root
-    # ports:
-    #   - 5432:5432
     volumes:
       - ./db/:/var/lib/postgresql/data
+  auth:
+    build: auth
+    restart: always
+    environment:
+      - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
+      # - ELS_BASE=http://elastic:9200/
+    depends_on:
+      - db
+  gateway:
+    build: gateway
+    restart: always
+    depends_on:
+      - auth
+    ports:
+      - 3000:3000
+    volumes:
+      - ./img/:/root/app/img
   web:
     build: web
     restart: always
@@ -18,15 +32,11 @@ services:
       - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
       - ELS_BASE=http://elastic:9200/
     depends_on:
-      - db
-    ports:
-      - 8080:8080
-    volumes:
-      - ./img/:/root/app/img
+      - auth
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
     ports:
-      - 8081:9200
+      - 9200:9200
       # - 9300:9300
     environment:
       - discovery.type=single-node

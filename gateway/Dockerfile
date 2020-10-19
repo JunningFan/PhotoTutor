@@ -14,8 +14,8 @@ FROM alpine:latest
 WORKDIR /root/app/ 
 COPY --from=builder /go/src/app/main . 
 
-EXPOSE 8081
-ENV GIN_MODE release 
+EXPOSE 3000
+ENV IS_DEPLOY true
 
 # we need a volume to store image
 VOLUME ["/root/app/img"]

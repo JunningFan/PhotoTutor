@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-	"os"
 	"phototutor/backend/controller"
 	"phototutor/backend/models"
 	"phototutor/backend/util"
@@ -11,8 +9,7 @@ import (
 )
 
 func setUpEnv() {
-	os.MkdirAll(util.ImgSmallPath, os.ModePerm)
-	os.MkdirAll(util.ImgBigPath, os.ModePerm)
+
 	util.SetUp()
 	models.Setup()
 }
@@ -23,18 +20,18 @@ func main() {
 	server := gin.Default()
 	// server.Use(TlsHandler())
 
-	server.Static("img/", util.ImgStaticPrefix)
+	// server.Static("img/", util.ImgStaticPrefix)
 
-	server.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"data": "hello world"})
-	})
-	picRoute := server.Group("/pictures/")
+	// server.GET("/", func(c *gin.Context) {
+	// 	c.JSON(http.StatusOK, gin.H{"data": "hello world"})
+	// })
+	picRoute := server.Group("/")
 	{
 		controller.NewPictureController(picRoute)
 		controller.NewImgController(picRoute)
 	}
-	controller.NewUserController(server.Group("/users/"))
-	err := server.Run()
+	// controller.NewUserController(server.Group("/users/"))
+	err := server.Run("0.0.0.0:8081")
 	//running in tls
 	// err := server.RunTLS(":8080", "ssl/rootCA.pem", "ssl/rootCA.key")
 	if err != nil {

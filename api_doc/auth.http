@@ -1,4 +1,4 @@
-@baseUrl =http://localhost:8080/
+@baseUrl =http://localhost:3000/user/
 @token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDMwNDMwMjl9.jmzo5o94NZv9FZvsTV17jiJEvxLt5krzbPZ9CEVkWmDTn7UijqyzwmqrX18QcZri1B_LOj6QaQeCe_R3hNvyzw
 
 ### Get user detail 
