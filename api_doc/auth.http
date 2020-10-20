@@ -1,6 +1,6 @@
 @baseUrl =http://localhost:3000/user/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDMwNDMwMjl9.jmzo5o94NZv9FZvsTV17jiJEvxLt5krzbPZ9CEVkWmDTn7UijqyzwmqrX18QcZri1B_LOj6QaQeCe_R3hNvyzw
-
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDMxOTczMTZ9.KY0dP7XKE7qxhepVnfwF7L6PbzxyrBj7Q0crtybB6oDBYCuaLaEqdchgM1NLR4hQyy669TzF-jg1DzZpu0M2wg
+@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE4NzQxNDk3fQ.L9iaz76QRFyEpl3vf_Jp8_fq1hoz3tDhGPT6UhX3Y3faBIQRZIkM-WjH0o9GcA_V2D1r1hqkXXFTZcA0fgn2Gw
 ### Get user detail 
 GET {{baseUrl}}1
 Accept: application/json
@@ -47,6 +47,6 @@ POST {{baseUrl}}refresh/
 Accept: application/json
 
 {
-    "Refresh": "{{token}}"
+    "Refresh": "{{refresh}}"
 }
 

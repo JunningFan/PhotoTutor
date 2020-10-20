@@ -37,7 +37,7 @@ func (c jwtClaimAccess) Valid() error {
 	return nil
 }
 func (c jwtClaimRefresh) Valid() error {
-	if c.Access != true {
+	if c.Access == true {
 		return fmt.Errorf("not a refresh token")
 	}
 	if time.Now().Unix() > c.Expire || c.Expire == 0 {
@@ -88,7 +88,7 @@ func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 func (uc *UserController) getOne(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
 	} else if user, err := uc.userManager.GetUser(uint(idNum)); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
@@ -177,14 +177,14 @@ func (uc *UserController) refresh(ctx *gin.Context) {
 		return
 	}
 
-	token, err := jwt.ParseWithClaims(input.Refresh, &jwtClaimAccess{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(input.Refresh, &jwtClaimRefresh{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else if !token.Valid {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "expired Token"})
-	} else if claims, ok := token.Claims.(*jwtClaimAccess); token.Valid && ok {
+	} else if claims, ok := token.Claims.(*jwtClaimRefresh); token.Valid && ok {
 		if access, err := getAccessToken(claims.ID); err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		} else {

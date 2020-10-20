@@ -22,7 +22,7 @@ services:
     depends_on:
       - auth
     ports:
-      - 3000:3000
+      - 8000:3000
     volumes:
       - ./img/:/root/app/img
   web:
@@ -31,8 +31,16 @@ services:
     environment:
       - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
       - ELS_BASE=http://elastic:9200/
+      - IMG_SER=http://uploader:8083/
     depends_on:
       - auth
+  uploader:
+    build: uploader
+    restart: always
+    environment:
+      - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
+    volumes:
+      - ./img/:/root/app/img
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
     ports:

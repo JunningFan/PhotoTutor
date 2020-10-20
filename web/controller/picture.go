@@ -2,11 +2,12 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
-	"phototutor/backend/elsClient"
+	"phototutor/backend/client"
 	"phototutor/backend/models"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type PictureController struct {
@@ -23,12 +24,12 @@ func NewPictureController(srvr *gin.RouterGroup) PictureController {
 }
 func (p *PictureController) getOne(ctx *gin.Context) {
 	id := ctx.Param("id")
-	if idNum,err:= strconv.ParseUint(id,10, 64); err != nil {
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
-	} else if pic, err:= p.pictureManager.One(uint(idNum)); err != nil{
+	} else if pic, err := p.pictureManager.One(uint(idNum)); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else{
-		ctx.JSON(http.StatusOK,pic)
+	} else {
+		ctx.JSON(http.StatusOK, pic)
 	}
 
 }
@@ -41,18 +42,18 @@ func (p PictureController) getAll(ctx *gin.Context) {
 }
 
 func (p PictureController) insert(uid uint, ctx *gin.Context) {
-	user, err := models.GetUserByID(uid)
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "user not exist"})
-		return
-	}
-	input := models.PictureInput{Uid: uid, User: user}
+	// user, err := models.GetUserByID(uid)
+	// if err != nil {
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "user not exist"})
+	// 	return
+	// }
+	input := models.PictureInput{Uid: uid}
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else if pic, err := p.pictureManager.Insert(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		go elsClient.PutElsObj(fmt.Sprintf("picture/_doc/%d",pic.ID),pic)
+		go client.PutElsObj(fmt.Sprintf("picture/_doc/%d", pic.ID), pic)
 		ctx.JSON(http.StatusOK, pic)
 	}
 }
