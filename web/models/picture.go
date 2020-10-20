@@ -2,6 +2,7 @@ package models
 
 import (
 	"phototutor/backend/client"
+	"time"
 
 	"github.com/mmcloughlin/geohash"
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ type Picture struct {
 	FocalLength  uint
 	Aperture     float64
 	ShutterSpeed float64
-	Timestamp    uint
+	Timestamp    time.Time
 	Orientation  float64
 	Elevation    float64
 
@@ -79,12 +80,13 @@ func (p *PictureManager) All() ([]Picture, error) {
 func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	//RPC to img server to get img info
 	imgInfo, err := client.GetImgInfo(input.Img)
-	if  err != nil {
+	if err != nil {
 		return Picture{}, err
 	}
 	if err := GetLocation(&input.Location); err != nil {
 		return Picture{}, err
 	}
+
 	pic := Picture{
 		Title:  input.Title,
 		UserID: input.Uid,
@@ -103,7 +105,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		FocalLength:  input.FocalLength,
 		Aperture:     input.Aperture,
 		ShutterSpeed: input.ShutterSpeed,
-		Timestamp:    input.Timestamp,
+		Timestamp:    time.Unix(int64(input.Timestamp), 0),
 		Orientation:  input.Orientation,
 		Elevation:    input.Elevation,
 	}
