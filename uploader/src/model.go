@@ -2,10 +2,12 @@ package src
 
 import (
 	"fmt"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"image"
 	"os"
 	"path"
-	"phototutor/backend/util"
 )
 
 type Img struct {
@@ -13,6 +15,33 @@ type Img struct {
 	Uid    uint
 	Suffix string
 }
+
+var (
+	conn *gorm.DB
+)
+
+func Setup(DB_DSN string) {
+	var err error
+	if DB_DSN == "" {
+		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	} else {
+		fmt.Println(DB_DSN)
+		//	only support postgres connection
+		conn, err = gorm.Open(postgres.Open(DB_DSN), &gorm.Config{})
+	}
+	if err != nil {
+		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
+	}
+	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
+
+	//register objects
+	err = conn.AutoMigrate(&Img{})
+	if err != nil {
+		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
+	}
+	//println("Finish set up databse conn dsn ", DB_DSN)
+}
+
 
 func AllocImgId(uid uint, suffix string) (uint, error) {
 	img := Img{Uid: uid, Suffix: suffix}
@@ -32,11 +61,17 @@ func (i *Img) picFileName() string {
 }
 
 func (i *Img) getResloution() (uint, uint, error) {
-	if reader, err := os.Open(path.Join(util.ImgBigPath, i.picFileName())); err != nil {
+	if reader, err := os.Open(path.Join(ImgBigPath, i.picFileName())); err != nil {
 		return 0, 0, err
 	} else if im, _, err := image.DecodeConfig(reader); err != nil {
 		return 0, 0, err
 	} else {
 		return uint(im.Height), uint(im.Width), nil
 	}
+}
+
+func First(pid uint) (Img, error) {
+	img := Img{}
+	res:= conn.First(&img, pid)
+	return img, res.Error
 }

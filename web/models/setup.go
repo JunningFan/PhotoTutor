@@ -26,7 +26,7 @@ func Setup() {
 	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	err = conn.AutoMigrate(&User{}, &Img{}, &Location{}, &Picture{})
+	err = conn.AutoMigrate(&Location{}, &Picture{})
 	if err != nil {
 		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
 	}

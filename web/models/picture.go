@@ -1,8 +1,7 @@
 package models
 
 import (
-	"fmt"
-	"phototutor/backend/util"
+	"phototutor/backend/client"
 
 	"github.com/mmcloughlin/geohash"
 	"gorm.io/gorm"
@@ -15,7 +14,7 @@ type Picture struct {
 	// `json:"-"`
 	// User   User
 	//Uid uint
-	Img        string `json:"-"`
+	// Img        string `json:"-"`
 	Lng        float64
 	Lat        float64
 	LocationID uint `json:"-"`
@@ -35,8 +34,8 @@ type Picture struct {
 	Width  uint
 
 	//Lid uint Fill by system
-	ImgSmall string `gorm:"-"`
-	ImgBig   string `gorm:"-"`
+	ImgSmall string
+	ImgBig   string
 }
 
 type PictureInput struct {
@@ -58,11 +57,11 @@ type PictureInput struct {
 	Img      uint `binding:"required"`
 }
 
-func (p *Picture) AfterFind(_ *gorm.DB) (err error) {
-	p.ImgBig = fmt.Sprintf("%s%s", util.ImgBigPath, p.Img)
-	p.ImgSmall = fmt.Sprintf("%s%s", util.ImgSmallPath, p.Img)
-	return
-}
+// func (p *Picture) AfterFind(_ *gorm.DB) (err error) {
+// 	p.ImgBig = fmt.Sprintf("%s%s", util.ImgBigPath, p.Img)
+// 	p.ImgSmall = fmt.Sprintf("%s%s", util.ImgSmallPath, p.Img)
+// 	return
+// }
 
 type PictureManager struct{}
 
@@ -78,29 +77,22 @@ func (p *PictureManager) All() ([]Picture, error) {
 }
 
 func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
-	var img Img
-	imgDb := conn.First(&img, input.Img)
-	if imgDb.Error != nil {
-		return Picture{}, fmt.Errorf("img %v is not exist", input.Img)
-	}
-	picName, err := img.GetImgFileName(input.Uid)
-	if err != nil {
+	//RPC to img server to get img info
+	imgInfo, err := client.GetImgInfo(input.Img)
+	if  err != nil {
 		return Picture{}, err
 	}
-	picHeight, picWidth, err := img.getResloution()
-	if err != nil {
-		return Picture{}, err
-	}
-
 	if err := GetLocation(&input.Location); err != nil {
 		return Picture{}, err
 	}
 	pic := Picture{
-		Title:    input.Title,
-		UserID:   input.Uid,
-		Img:      picName,
-		Height:   picHeight,
-		Width:    picWidth,
+		Title:  input.Title,
+		UserID: input.Uid,
+		// Img:      picName,
+		ImgSmall: imgInfo.Small,
+		ImgBig:   imgInfo.Big,
+		Height:   imgInfo.Height,
+		Width:    imgInfo.Width,
 		Lng:      input.Lng,
 		Lat:      input.Lat,
 		Location: input.Location,

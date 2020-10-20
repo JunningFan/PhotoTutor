@@ -1,4 +1,4 @@
-package controller
+package src
 
 import (
 	"fmt"
@@ -12,17 +12,69 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"phototutor/backend/models"
-	"phototutor/backend/util"
+	"github.com/dgrijalva/jwt-go"
+	"strconv"
+	"time"
+
 	"strings"
 )
 
 type ImgController struct{}
+const SecretKey = "123hn312r9fxh28739dn182gdahs987tgd56afs"
+const ImgStaticPrefix = "img/"
+const ImgSmallPath = ImgStaticPrefix + "small/"
+const ImgBigPath = ImgStaticPrefix + "big/"
+
+
+
+type JwtClaims struct {
+	ID     uint
+	Expire int64
+}
+
+func (c JwtClaims) Valid() error {
+	if time.Now().Unix() > c.Expire || c.Expire == 0 {
+		return fmt.Errorf("auth token is expred")
+	}
+	return nil
+}
+
+// Passing a handler that User is the first variable
+// Then is auth is success, the handler will be called
+func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		tokenStr := context.GetHeader("Authorization")
+		if len(tokenStr) == 0 {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "login required"})
+			return
+		}
+		token, err := jwt.ParseWithClaims(tokenStr, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(SecretKey), nil
+		})
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if !token.Valid {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "expired Token"})
+			return
+		}
+		if claims, ok := token.Claims.(*JwtClaims); token.Valid && ok {
+			handler(claims.ID, context)
+
+		} else {
+			//authorized and pass the context
+			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad Token"})
+		}
+	}
+}
+
+
 
 func NewImgController(srvr *gin.RouterGroup) ImgController {
 	res := ImgController{}
-
-	srvr.POST("upload/", RequrieAuth(res.upload))
+	srvr.GET("/:id",res.getPath)
+	srvr.POST("/", RequrieAuth(res.upload))
 	return res
 }
 func checkSuffix(suffix *string) bool {
@@ -41,7 +93,7 @@ func (i *ImgController) mkThumbnail(path string, imgType string) {
 }
 
 func putSmallImgByImg(img image.Image, imgName string, imgType string) {
-	out, err := os.Create(path.Join(util.ImgSmallPath, imgName))
+	out, err := os.Create(path.Join(ImgSmallPath, imgName))
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -60,7 +112,7 @@ func putSmallImgByImg(img image.Image, imgName string, imgType string) {
 
 func getBigImgByName(imgName string, imgType string) (image.Image, error) {
 	var empty image.Image
-	file, err := os.Open(path.Join(util.ImgBigPath, imgName))
+	file, err := os.Open(path.Join(ImgBigPath, imgName))
 	if err != nil {
 		return empty, err
 	}
@@ -99,13 +151,13 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 	var imgId uint
 	var out *os.File
 
-	imgId, err = models.AllocImgId(uid, suffix)
+	imgId, err = AllocImgId(uid, suffix)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	imgName := fmt.Sprintf("%d.%s", imgId, suffix)
-	out, err = os.Create(path.Join(util.ImgBigPath, imgName))
+	out, err = os.Create(path.Join(ImgBigPath, imgName))
 	defer out.Close()
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -122,4 +174,22 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"img": imgId})
 	// generate thumbnail import "github.com/nfnt/resize"
 	go c.mkThumbnail(imgName, suffix)
+}
+
+func (c *ImgController) getPath(ctx *gin.Context) {
+	if idNum, err := strconv.ParseUint(ctx.Param("id"), 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of image must be string"})
+	} else if i, err := First(uint(idNum));  err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else if height, width, err:= i.getResloution(); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{
+			"uid": i.Uid,
+			"height": height,
+			"width": width,
+			"big" : fmt.Sprintf("%s%d", ImgBigPath, i.Id),
+			"small":  fmt.Sprintf("%s%d", ImgSmallPath, i.Id),
+		})
+	}
 }

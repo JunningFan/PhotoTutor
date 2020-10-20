@@ -88,7 +88,7 @@ func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 func (uc *UserController) getOne(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
 	} else if user, err := uc.userManager.GetUser(uint(idNum)); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
