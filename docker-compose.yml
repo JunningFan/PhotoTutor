@@ -33,6 +33,9 @@ services:
       - ELS_BASE=http://elastic:9200/
     depends_on:
       - auth
+    volumes:
+      - ./img/:/root/app/img
+
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
     ports:

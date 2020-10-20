@@ -11,8 +11,9 @@ import (
 type Picture struct {
 	gorm.Model
 	Title  string
-	UserID uint `json:"-"`
-	User   User
+	UserID uint
+	// `json:"-"`
+	// User   User
 	//Uid uint
 	Img        string `json:"-"`
 	Lng        float64
@@ -39,9 +40,10 @@ type Picture struct {
 }
 
 type PictureInput struct {
-	Title        string `binding:"required"`
-	Uid          uint   `json:"-"` // inject after login
-	User         User
+	Title string `binding:"required"`
+	Uid   uint
+	// `json:"-"` // inject after login
+	// User         User
 	Lng          float64 `binding:"required"`
 	Lat          float64 `binding:"required"`
 	Iso          uint
@@ -70,7 +72,7 @@ func NewPictureManager() PictureManager {
 
 func (p *PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Debug().Preload("User").Preload("Location").Find(&pictures)
+	res := conn.Debug().Preload("Location").Find(&pictures)
 
 	return pictures, res.Error
 }
@@ -113,7 +115,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Orientation:  input.Orientation,
 		Elevation:    input.Elevation,
 	}
-	res := conn.Preload("User").Create(&pic).Find(&pic)
+	res := conn.Create(&pic).Find(&pic)
 
 	return pic, res.Error
 }
@@ -121,6 +123,6 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 // One Find the one picture
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
-	res := conn.Debug().Preload("User").Preload("Location").First(&picture, pid)
+	res := conn.Debug().Preload("Location").First(&picture, pid)
 	return picture, res.Error
 }
