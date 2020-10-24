@@ -5,17 +5,23 @@ from collections import OrderedDict
 from faker import Faker
 from faker.config import AVAILABLE_LOCALES
 def main():
-    if not os.path.exists(os.path.join(os.getcwd(),"downloadPics")):
-        os.mkdir(os.path.join(os.getcwd(),"downloadPics"))
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    if not os.path.exists(os.path.join(dir_path,"downloadPics")):
+        os.mkdir(os.path.join(dir_path,"downloadPics"))
     numUsers = int(input("Number of users: ") )
     numPics = int(input("Number of pictures per user: ") )
 
-    DRIVER_PATH = 'chromedriver.exe'
+    dpSet = {"selfie","headshot","photo"}
+    query = {"scenery","buildings","nature","landmarks"}
+
+    DRIVER_PATH = os.path.join(dir_path,'chromedriver.exe')
+    print(DRIVER_PATH)
     wd = selenium.webdriver.Chrome(executable_path=DRIVER_PATH)
     fake = Faker(AVAILABLE_LOCALES)
     for i in range(numUsers):
         userURL = "http://localhost:8080/users"
         name = names.get_full_name()
+        firstName = str(name.split()[0])
         args = {}
         args["username"] = name
         args["password"] = "password"
@@ -39,7 +45,7 @@ def main():
         city = fake[locale].city()
         state = fake[locale].city()
         
-        query = {"scenery","buildings","nature","landmarks"}
+        
 
         urls = fetch_image_urls(country + " " + random.choice(tuple(query)),numPics,wd)
         for url in urls:
@@ -80,8 +86,30 @@ def main():
                 'Elevation': 123.43
                 }
             jsonParams = json.dumps(picData)
-            headers={'Authorization': token}
-            ret = requests.post(userURL + "/pictures/", data=jsonParams, headers=headers)
+            ret = requests.post(userURL + "/pictures/", data=jsonParams, headers=header)
+            #Set the profile pic
+            profilePic = fetch_image_urls(firstName + " " + random.choice(tuple(dpSet)),1,wd)
+            filename = "downloadPics/"+str(random.randint(0,99999999999999999)) + '.jpg'
+            with open(filename, 'wb') as handle:
+                response = requests.get(list(profilePic)[0], stream=True)
+                if not response.ok:
+                    print(response)
+                for block in response.iter_content(1024):
+                    if not block:
+                        break
+                    handle.write(block)
+
+            files = {'upload': open(fileName, 'rb')}
+            ret = requests.post(userURL + "/pictures/upload", files=files, headers=header)
+            imageID = (json.loads(ret.content))["img"]
+            update = {
+                "Nickname": firstName,
+                "Signature": "Hello, my name is " + firstName,
+                "Img": imageID
+            }
+            jsonParams = json.dumps(update)
+            ret = requests.put("http://localhost:8080/users", data=jsonParams, headers=header)
+            
 
 
 
