@@ -1,17 +1,17 @@
 # @baseUrl=http://localhost:8081/
-@baseUrl=http://whiteboard.house:8000/picture/
-# @baseUrl=http://localhost:8000/picture/
+# @baseUrl=http://whiteboard.house:8000/picture/
+@baseUrl=http://localhost:8000/picture/
 
 ### Hello World
 GET {{baseUrl}}
 Accept: application/json
 
 ### Get Picture Lists
-GET {{baseUrl}}1
+GET {{baseUrl}}
 Accept: application/json
 
 ### Get Picture Detail
-POST {{baseUrl}}picture/1
+POST {{baseUrl}}1
 Accept: application/json
 
 ### Post Picture
@@ -36,7 +36,7 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVl
     "Timestamp":2147483647,
     "Orientation": 24,
     "Elevation": 123.43,
-    "Tags": ["hello", "world"]
+    "Tags": ["cloudy", "forest"]
 }
 
 

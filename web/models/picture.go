@@ -140,6 +140,6 @@ func syncElsObj(p Picture) {
 
 func incPicNView(p Picture) {
 	p.NView++
-	conn.Model(&Picture{}).Update("NView", p.NView)
+	conn.Model(&p).Update("NView", p.NView)
 	syncElsObj(p)
 }
