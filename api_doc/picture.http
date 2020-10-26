@@ -1,23 +1,23 @@
 ### Hello World
-GET http://localhost:8000/
+GET http://localhost:8081/
 Accept: application/json
 
 ### Get Picture Lists
-GET http://localhost:8000/picture/
+GET http://localhost:8081/2
 Accept: application/json
 
 ### Get Picture Detail
-GET http://localhost:8000/picture/2
+POST http://localhost:8081/picture/1
 Accept: application/json
 
 ### Post Picture
-POST http://localhost:8000/picture/
+POST http://localhost:8081/
 Accept: application/json
-Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDMxOTA2OTd9.wltQlGOnpd7vkWO0zjOIEKAchUECw27NxmFiZHXQKDPcduE_qRC85cmT41dM_YhZbBd24RET1oQCQcpuIwtErA
+Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM3MTc4OTZ9.wtHQyBp387eO3Q3OP1E9UtyhcGQFIj7lKwb-mRuWTuTx17R_cUdK42sMQByAm736xaHFjmm1Yp2xVOGahnl-Bg
 
 {
 	"title": "helloworld",
-    "Img": 13,
+    "Img": 5,
     "lat": 3.44,
     "lng": 1.22,
     "location" : {
@@ -31,13 +31,14 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVl
     "ShutterSpeed":0.24,
     "Timestamp":2147483647,
     "Orientation": 24,
-    "Elevation": 123.43
+    "Elevation": 123.43,
+    "Tags": ["hello", "world"]
 }
 
 
 
 ### Get Picture By User
-GET http://localhost:8000/els/picture/_search
+POST http://localhost:8081/els/picture/_search
 Content-Type: application/json
 
 {
@@ -51,7 +52,7 @@ Content-Type: application/json
 }
 
 ### Search
-GET http://localhost:8000/els/picture/_search
+POST http://localhost:8081/els/picture/_search
 Content-Type: application/json
 
 {
@@ -68,7 +69,7 @@ Content-Type: application/json
 }
 
 ### Geo base search
-GET http://localhost:8000/els/picture/_search
+POST http://localhost:8081/els/picture/_search
 Content-Type: application/json
 
 {
