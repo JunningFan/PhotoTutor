@@ -3,7 +3,7 @@ import requests
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 response = requests.post(
-    "http://localhost:3000/user/login/",
+    "http://whiteboard.house:8000/user/login/",
     json={
         "username": "ttt1",
         "password": "apple123"
@@ -17,7 +17,7 @@ encoder = MultipartEncoder(fields={
 })
 
 response = requests.post(
-    "http://localhost:3000/upload/",
+    "http://whiteboard.house:8000/upload/",
     data=encoder,
     headers={
         "Authorization": access,

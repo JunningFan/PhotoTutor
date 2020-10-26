@@ -1,23 +1,27 @@
+# @baseUrl=http://localhost:8081/
+@baseUrl=http://whiteboard.house:8000/picture/
+# @baseUrl=http://localhost:8000/picture/
+
 ### Hello World
-GET http://localhost:8081/
+GET {{baseUrl}}
 Accept: application/json
 
 ### Get Picture Lists
-GET http://localhost:8081/2
+GET {{baseUrl}}1
 Accept: application/json
 
 ### Get Picture Detail
-POST http://localhost:8081/picture/1
+POST {{baseUrl}}picture/1
 Accept: application/json
 
 ### Post Picture
-POST http://localhost:8081/
+POST {{baseUrl}}
 Accept: application/json
-Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM3MTc4OTZ9.wtHQyBp387eO3Q3OP1E9UtyhcGQFIj7lKwb-mRuWTuTx17R_cUdK42sMQByAm736xaHFjmm1Yp2xVOGahnl-Bg
+Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM4MDcxMjJ9.k0vuSUqEADxjUrlJye7RLaQxUwagCx4Mxem7XJgLZQLuUg9aGrMzTAJZ6X5Lk-qVBF2wXy7isRl2wIlD0RZ1ZQ
 
 {
 	"title": "helloworld",
-    "Img": 5,
+    "Img": 1,
     "lat": 3.44,
     "lng": 1.22,
     "location" : {
@@ -36,57 +40,3 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVl
 }
 
 
-
-### Get Picture By User
-POST http://localhost:8081/els/picture/_search
-Content-Type: application/json
-
-{
-  "from": 1,
-  "size": 1,
-  "query":{
-      "match": {
-          "User.ID": 1
-      }
-  }
-}
-
-### Search
-POST http://localhost:8081/els/picture/_search
-Content-Type: application/json
-
-{
-  "from": 0,
-  "size": 10,
-  "query":{
-    "multi_match":{
-      "query":"helloworld",
-      "fields":[
-        "Title", "User.Nickname", "User.Username"
-      ]
-    }
-  }
-}
-
-### Geo base search
-POST http://localhost:8081/els/picture/_search
-Content-Type: application/json
-
-{
-  "from": 0,
-  "size": 10,
-  "query": {
-    "geo_bounding_box": {
-      "GeoHash": {
-        "top_left": {
-          "lat": 4,
-          "lon": 1
-        },
-        "bottom_right": {
-          "lat": 3,
-          "lon": 2
-        }
-      }
-    }
-  }
-}

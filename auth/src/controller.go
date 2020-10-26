@@ -127,7 +127,7 @@ func getAccessToken(user uint) (string, error) {
 	short := jwt.NewWithClaims(jwt.SigningMethodHS512, jwtClaimAccess{
 		ID:     user,
 		Access: true,
-		Expire: time.Now().Add(time.Minute * 20).Unix()})
+		Expire: time.Now().Add(time.Hour * 24).Unix()})
 	return short.SignedString([]byte(secretKey))
 }
 

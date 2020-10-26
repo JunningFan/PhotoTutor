@@ -1,6 +1,7 @@
-@baseUrl =http://localhost:3000/user/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDMxOTczMTZ9.KY0dP7XKE7qxhepVnfwF7L6PbzxyrBj7Q0crtybB6oDBYCuaLaEqdchgM1NLR4hQyy669TzF-jg1DzZpu0M2wg
-@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE4NzQxNDk3fQ.L9iaz76QRFyEpl3vf_Jp8_fq1hoz3tDhGPT6UhX3Y3faBIQRZIkM-WjH0o9GcA_V2D1r1hqkXXFTZcA0fgn2Gw
+@baseUrl =http://whiteboard.house:8000/user/
+# @baseUrl =http://localhost:8000/user/
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM3MjU5MjZ9.mcmUxB4BBi52OID6z1bwy-cGwyMbXVHo7htIisSitQCstSytjBVGeRkRLUFr59uc0Zk13X794w5IqFMyHrzTSA
+@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5Mjc2NzI2fQ.Bx24G-qzCAmemhL2sfolpprXqBHMMtdE6x-Ik11d5Jtvbrf6H9mbnxohZIGNZrZaLhjq2RC9ClYwCE11FV0o6A
 ### Get user detail 
 GET {{baseUrl}}1
 Accept: application/json

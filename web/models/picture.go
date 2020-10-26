@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"phototutor/backend/client"
 	"time"
 
@@ -16,6 +17,8 @@ type Picture struct {
 	gorm.Model
 	Title  string
 	UserID uint
+	NView  uint // how many views
+
 	// `json:"-"`
 	// User   User
 	//Uid uint
@@ -67,11 +70,6 @@ type PictureInput struct {
 
 type PictureManager struct{}
 
-// func (*Picture) BeforeCreate(tx *gorm.DB) (err error) {
-// 	for
-
-// }
-
 func NewPictureManager() PictureManager {
 	return PictureManager{}
 }
@@ -98,9 +96,9 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	}
 
 	pic := Picture{
-		Title:  input.Title,
-		UserID: input.Uid,
-		// Img:      picName,
+		Title:    input.Title,
+		UserID:   input.Uid,
+		NView:    0,
 		ImgSmall: imgInfo.Small,
 		ImgBig:   imgInfo.Big,
 		Height:   imgInfo.Height,
@@ -122,7 +120,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Tags:        tags,
 	}
 	res := conn.Create(&pic).Find(&pic)
-
+	go syncElsObj(pic)
 	return pic, res.Error
 }
 
@@ -130,5 +128,18 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
 	res := conn.Debug().Joins("Location").Preload("Tags").First(&picture, pid)
+	go incPicNView(picture)
 	return picture, res.Error
+}
+
+/* Coroutine function, all expected the caller has wrap these function in a coroutine */
+
+func syncElsObj(p Picture) {
+	client.PutElsObj(fmt.Sprintf("picture/_doc/%d", p.ID), p)
+}
+
+func incPicNView(p Picture) {
+	p.NView++
+	conn.Model(&Picture{}).Update("NView", p.NView)
+	syncElsObj(p)
 }
