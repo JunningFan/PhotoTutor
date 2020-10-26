@@ -14,7 +14,7 @@ FROM alpine:latest
 WORKDIR /root/app/ 
 COPY --from=builder /go/src/app/main . 
 
-EXPOSE 8080
+EXPOSE 8083
 ENV GIN_MODE release 
 
 # we need a volume to store image

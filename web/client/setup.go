@@ -29,30 +29,29 @@ type ImgInfo struct {
 }
 
 type ErrorResp struct {
-	Error  string
+	Error string
 }
-
 
 func GetImgInfo(id uint) (ImgInfo, error) {
 	img := ImgInfo{}
-	errResp:= ErrorResp{}
-	resp, err := http.Get(fmt.Sprintf("%s%d", "http://localhost:8083/", id))
-	if  err != nil {
+	errResp := ErrorResp{}
+	resp, err := http.Get(fmt.Sprintf("%s%d", util.IMG_SER, id))
+	if err != nil {
 		return ImgInfo{}, err
 	} else if resp.StatusCode != 200 {
 
 		if bodyBytes, err := ioutil.ReadAll(resp.Body); err != nil {
 			return ImgInfo{}, err
-		} else if err:= json.Unmarshal(bodyBytes, &errResp); err != nil {
+		} else if err := json.Unmarshal(bodyBytes, &errResp); err != nil {
 			return ImgInfo{}, err
 		} else {
 			return ImgInfo{}, fmt.Errorf(errResp.Error)
 		}
-	}else if bodyBytes, err := ioutil.ReadAll(resp.Body); err != nil {
+	} else if bodyBytes, err := ioutil.ReadAll(resp.Body); err != nil {
 		return ImgInfo{}, err
-	} else if err:= json.Unmarshal(bodyBytes, &img); err != nil {
+	} else if err := json.Unmarshal(bodyBytes, &img); err != nil {
 		return ImgInfo{}, err
-	}else if err := resp.Body.Close(); err != nil {
+	} else if err := resp.Body.Close(); err != nil {
 		return ImgInfo{}, err
 	} else {
 		return img, nil
