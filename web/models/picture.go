@@ -10,7 +10,14 @@ import (
 )
 
 type Tag struct {
-	Name string `gorm:"primaryKey"`
+	Name string `gorm:"primaryKey";binding:"required"`
+}
+
+type Comment struct {
+	gorm.Model
+	PictureID uint
+	Message   string `binding:"required"`
+	UID       uint
 }
 
 type Picture struct {
@@ -19,10 +26,6 @@ type Picture struct {
 	UserID uint
 	NView  uint // how many views
 
-	// `json:"-"`
-	// User   User
-	//Uid uint
-	// Img        string `json:"-"`
 	Lng        float64
 	Lat        float64
 	LocationID uint `json:"-"`
@@ -46,6 +49,8 @@ type Picture struct {
 	ImgBig   string
 
 	Tags []Tag `gorm:"many2many:picture_tag;"`
+	// has many tags
+	Comments []Comment `json:"-"`
 }
 
 type PictureInput struct {
@@ -120,7 +125,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Tags:        tags,
 	}
 	res := conn.Create(&pic).Find(&pic)
-	go syncElsObj(pic)
+	go syncElsPicture(pic)
 	return pic, res.Error
 }
 
@@ -132,14 +137,34 @@ func (p *PictureManager) One(pid uint) (Picture, error) {
 	return picture, res.Error
 }
 
+// Comment Make a comment to a picture
+func (p *PictureManager) Comment(pid uint, comment Comment) (Comment, error) {
+	pic, err := p.One(pid)
+	if err != nil {
+		return Comment{}, err
+	}
+
+	comment.PictureID = pic.ID
+	res := conn.Save(&comment)
+	if res.Error != nil {
+		return Comment{}, res.Error
+	}
+	go syncElsComment(comment)
+	return comment, nil
+}
+
 /* Coroutine function, all expected the caller has wrap these function in a coroutine */
 
-func syncElsObj(p Picture) {
+func syncElsPicture(p Picture) {
 	client.PutElsObj(fmt.Sprintf("picture/_doc/%d", p.ID), p)
+}
+
+func syncElsComment(c Comment) {
+	client.PutElsObj(fmt.Sprintf("comment/_doc/%d", c.ID), c)
 }
 
 func incPicNView(p Picture) {
 	p.NView++
 	conn.Model(&p).Update("NView", p.NView)
-	syncElsObj(p)
+	syncElsPicture(p)
 }

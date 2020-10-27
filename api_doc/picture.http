@@ -1,6 +1,7 @@
 # @baseUrl=http://localhost:8081/
-# @baseUrl=http://whiteboard.house:8000/picture/
 @baseUrl=http://localhost:8000/picture/
+# @baseUrl=http://whiteboard.house:8000/picture/
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM4ODQ1NTd9.Oxb1iX8nK_bG-RMNOBPRJbp5AlohGoecBnGGntKMCwFP2_cp8m4Y7s_iQtRutIOhddrauTOStEHDtLRSyT87ig
 
 ### Hello World
 GET {{baseUrl}}
@@ -17,7 +18,7 @@ Accept: application/json
 ### Post Picture
 POST {{baseUrl}}
 Accept: application/json
-Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM4MDcxMjJ9.k0vuSUqEADxjUrlJye7RLaQxUwagCx4Mxem7XJgLZQLuUg9aGrMzTAJZ6X5Lk-qVBF2wXy7isRl2wIlD0RZ1ZQ
+Authorization: {{auth}}
 
 {
 	"title": "helloworld",
@@ -40,3 +41,12 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVl
 }
 
 
+
+### Comment 
+POST {{baseUrl}}6/comment
+Accept: application/json
+Authorization: {{auth}}
+
+{
+    "message":"I really like this photo!"
+}

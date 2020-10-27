@@ -18,6 +18,7 @@ func NewPictureController(srvr *gin.RouterGroup) PictureController {
 	srvr.GET("", res.getAll)
 	srvr.POST("", RequrieAuth(res.insert))
 	srvr.GET(":id", res.getOne)
+	srvr.POST(":id/comment", RequrieAuth(res.comment))
 	return res
 }
 func (p *PictureController) getOne(ctx *gin.Context) {
@@ -31,7 +32,7 @@ func (p *PictureController) getOne(ctx *gin.Context) {
 	}
 
 }
-func (p PictureController) getAll(ctx *gin.Context) {
+func (p *PictureController) getAll(ctx *gin.Context) {
 	if data, err := p.pictureManager.All(); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
@@ -39,7 +40,7 @@ func (p PictureController) getAll(ctx *gin.Context) {
 	}
 }
 
-func (p PictureController) insert(uid uint, ctx *gin.Context) {
+func (p *PictureController) insert(uid uint, ctx *gin.Context) {
 	// user, err := models.GetUserByID(uid)
 	// if err != nil {
 	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "user not exist"})
@@ -53,4 +54,20 @@ func (p PictureController) insert(uid uint, ctx *gin.Context) {
 	} else {
 		ctx.JSON(http.StatusOK, pic)
 	}
+}
+
+func (p *PictureController) comment(uid uint, ctx *gin.Context) {
+	id := ctx.Param("id")
+	input := models.Comment{UID: uid}
+
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
+	} else if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else if comment, err := p.pictureManager.Comment(uint(idNum), input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, comment)
+	}
+
 }

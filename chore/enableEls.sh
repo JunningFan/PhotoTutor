@@ -13,3 +13,5 @@ curl -X PUT "${1}/picture" \
     }
   }
 }'
+
+curl -X PUT "${1}/comment"
