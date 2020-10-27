@@ -89,7 +89,7 @@ func (u *User) SetPassword(password string) error {
 func (u *User) CheckPassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	if err != nil {
-		return fmt.Errorf("wrong password")
+		return fmt.Errorf("invalid username / password")
 	}
 	return nil
 }
