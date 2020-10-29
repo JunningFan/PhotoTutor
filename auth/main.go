@@ -16,6 +16,7 @@ func main() {
 	server := gin.Default()
 	src.NewUserController(server.Group("/"))
 	src.Setup(os.Getenv("DB_DSN"))
+	src.NewClient(os.Getenv("IMG_SER"))
 
 	err := server.Run()
 	if err != nil {

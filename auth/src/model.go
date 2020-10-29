@@ -135,17 +135,14 @@ func GetUserByID(uid uint) (User, error) {
 // Update User information
 func (um *UserManager) Update(uid uint, input UserUpdateInput) (User, error) {
 	user := User{}
-	if res := conn.Find(&user, uid); res.Error != nil {
+	if img, err := GetImgInfo(input.Img, uid); err != nil {
+		return User{}, err
+	} else if res := conn.Find(&user, uid); res.Error != nil {
 		return User{}, res.Error
-		// TODO: RPC To get the image location
-		// } else if res := conn.First(&img, input.Img); res.Error != nil {
-		// 	return User{}, res.Error
-		// } else if imgPath, err := img.GetImgFileName(uid); err != nil {
-		// 	return User{}, err
 	} else {
 		user.Nickname = input.Nickname
 		user.Signature = input.Signature
-		user.ImgLoc = fmt.Sprintf("%d", input.Img)
+		user.ImgLoc = img.Small
 		// user.ImgLoc = path.Join(util.ImgSmallPath, imgPath)
 
 		if res := conn.Save(&user); res.Error != nil {

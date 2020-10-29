@@ -2,8 +2,6 @@ package src
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/nfnt/resize"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -12,20 +10,22 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"github.com/dgrijalva/jwt-go"
 	"strconv"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"github.com/nfnt/resize"
 
 	"strings"
 )
 
 type ImgController struct{}
+
 const SecretKey = "123hn312r9fxh28739dn182gdahs987tgd56afs"
 const ImgStaticPrefix = "img/"
 const ImgSmallPath = ImgStaticPrefix + "small/"
 const ImgBigPath = ImgStaticPrefix + "big/"
-
-
 
 type JwtClaims struct {
 	ID     uint
@@ -69,11 +69,9 @@ func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 	}
 }
 
-
-
 func NewImgController(srvr *gin.RouterGroup) ImgController {
 	res := ImgController{}
-	srvr.GET("/:id",res.getPath)
+	srvr.GET("/:id", res.getPath)
 	srvr.POST("/", RequrieAuth(res.upload))
 	return res
 }
@@ -179,17 +177,17 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 func (c *ImgController) getPath(ctx *gin.Context) {
 	if idNum, err := strconv.ParseUint(ctx.Param("id"), 10, 64); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of image must be string"})
-	} else if i, err := First(uint(idNum));  err != nil {
+	} else if i, err := First(uint(idNum)); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else if height, width, err:= i.getResloution(); err != nil {
+	} else if height, width, err := i.getResloution(); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
-			"uid": i.Uid,
+			"uid":    i.Uid,
 			"height": height,
-			"width": width,
-			"big" : fmt.Sprintf("%s%d", ImgBigPath, i.Id),
-			"small":  fmt.Sprintf("%s%d", ImgSmallPath, i.Id),
+			"width":  width,
+			"big":    fmt.Sprintf("%s%d.%s", ImgBigPath, i.Id, i.Suffix),
+			"small":  fmt.Sprintf("%s%d.%s", ImgSmallPath, i.Id, i.Suffix),
 		})
 	}
 }

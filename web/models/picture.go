@@ -111,7 +111,7 @@ func (p *PictureManager) All() ([]Picture, error) {
 
 func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	//RPC to img server to get img info
-	imgInfo, err := client.GetImgInfo(input.Img)
+	imgInfo, err := client.GetImgInfo(input.Img, input.Uid)
 	if err != nil {
 		return Picture{}, err
 	}
