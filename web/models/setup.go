@@ -14,7 +14,7 @@ var conn *gorm.DB
 func Setup() {
 	var err error
 	if util.DB_DSN == "" {
-		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+		conn, err = gorm.Open(sqlite.Open("test.db?parseTime=true"), &gorm.Config{})
 	} else {
 		fmt.Println(util.DB_DSN)
 		//	only support postgres connection
@@ -26,7 +26,7 @@ func Setup() {
 	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	err = conn.AutoMigrate(&Location{}, &Picture{})
+	err = conn.AutoMigrate(&Location{}, &Picture{}, &Tag{})
 	if err != nil {
 		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
 	}

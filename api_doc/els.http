@@ -1,0 +1,69 @@
+# @baseUrl=http://localhost:8000/els/picture/_search
+@baseUrl=http://whiteboard.house:8000/els/picture/_search
+### Get Picture By User
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 1,
+  "query":{
+      "match": {
+          "UserID": 1
+      }
+  }
+}
+
+### Get Picture By User
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 1,
+  "query":{
+      "match": {
+          "UserID": 1
+      }
+  }
+}
+
+### Search
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 10,
+  "query":{
+    "multi_match":{
+      "query":"world",
+      "fields":[
+        "Title", "Tags.Name"
+      ]
+    }
+  }
+}
+
+### Geo base search
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 10,
+  "query": {
+    "geo_bounding_box": {
+      "GeoHash": {
+        "top_left": {
+          "lat": 4,
+          "lon": 1
+        },
+        "bottom_right": {
+          "lat": 3,
+          "lon": 2
+        }
+      }
+    }
+  }
+}

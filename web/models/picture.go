@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"phototutor/backend/client"
 	"time"
 
@@ -8,10 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
+type Tag struct {
+	Name string `gorm:"primaryKey"`
+}
+
 type Picture struct {
 	gorm.Model
 	Title  string
 	UserID uint
+	NView  uint // how many views
+
 	// `json:"-"`
 	// User   User
 	//Uid uint
@@ -34,9 +41,11 @@ type Picture struct {
 	Height uint
 	Width  uint
 
-	//Lid uint Fill by system
+	// fill by creation
 	ImgSmall string
 	ImgBig   string
+
+	Tags []Tag `gorm:"many2many:picture_tag;"`
 }
 
 type PictureInput struct {
@@ -56,13 +65,8 @@ type PictureInput struct {
 
 	Location Location
 	Img      uint `binding:"required"`
+	Tags     []string
 }
-
-// func (p *Picture) AfterFind(_ *gorm.DB) (err error) {
-// 	p.ImgBig = fmt.Sprintf("%s%s", util.ImgBigPath, p.Img)
-// 	p.ImgSmall = fmt.Sprintf("%s%s", util.ImgSmallPath, p.Img)
-// 	return
-// }
 
 type PictureManager struct{}
 
@@ -72,8 +76,8 @@ func NewPictureManager() PictureManager {
 
 func (p *PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Debug().Preload("Location").Find(&pictures)
-
+	res := conn.Debug().Joins("Location").Preload("Tags").Find(&pictures)
+	// print(conn.Debug().Association("Tag"))
 	return pictures, res.Error
 }
 
@@ -86,11 +90,15 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	if err := GetLocation(&input.Location); err != nil {
 		return Picture{}, err
 	}
+	tags := make([]Tag, len(input.Tags))
+	for i, tag_name := range input.Tags {
+		tags[i] = Tag{Name: tag_name}
+	}
 
 	pic := Picture{
-		Title:  input.Title,
-		UserID: input.Uid,
-		// Img:      picName,
+		Title:    input.Title,
+		UserID:   input.Uid,
+		NView:    0,
 		ImgSmall: imgInfo.Small,
 		ImgBig:   imgInfo.Big,
 		Height:   imgInfo.Height,
@@ -106,17 +114,32 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Aperture:     input.Aperture,
 		ShutterSpeed: input.ShutterSpeed,
 		Timestamp:    time.Unix(int64(input.Timestamp), 0),
-		Orientation:  input.Orientation,
-		Elevation:    input.Elevation,
+		// Timestamp:   input.Timestamp,
+		Orientation: input.Orientation,
+		Elevation:   input.Elevation,
+		Tags:        tags,
 	}
 	res := conn.Create(&pic).Find(&pic)
-
+	go syncElsObj(pic)
 	return pic, res.Error
 }
 
 // One Find the one picture
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
-	res := conn.Debug().Preload("Location").First(&picture, pid)
+	res := conn.Debug().Joins("Location").Preload("Tags").First(&picture, pid)
+	go incPicNView(picture)
 	return picture, res.Error
+}
+
+/* Coroutine function, all expected the caller has wrap these function in a coroutine */
+
+func syncElsObj(p Picture) {
+	client.PutElsObj(fmt.Sprintf("picture/_doc/%d", p.ID), p)
+}
+
+func incPicNView(p Picture) {
+	p.NView++
+	conn.Model(&p).Update("NView", p.NView)
+	syncElsObj(p)
 }
