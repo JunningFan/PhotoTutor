@@ -152,3 +152,17 @@ func (um *UserManager) Update(uid uint, input UserUpdateInput) (User, error) {
 		}
 	}
 }
+
+// NicknameMap Only for mapping nicknames
+type NicknameMap struct {
+	ID       uint
+	Nickname string
+}
+
+// ResolveNicknameByIds get a dist of id by an array
+// the array must be increment by id
+func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
+	var ret []NicknameMap
+	res := conn.Find(&User{}, ids).Order("id ASC").Pluck("nickname", &ret)
+	return ret, res.Error
+}

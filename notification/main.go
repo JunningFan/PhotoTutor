@@ -17,6 +17,7 @@ func main() {
 	server := gin.Default()
 	src.NewNotificationController(server.Group("/"))
 	src.Setup(os.Getenv("DB_DSN"))
+	src.NewClient(os.Getenv("AUTH_SER"))
 	err := server.Run("0.0.0.0:8084")
 	if err != nil {
 		println(err.Error())

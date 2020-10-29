@@ -64,11 +64,34 @@ func NewNotificationController(srvr *gin.RouterGroup) NotificationController {
 	return ret
 }
 
+type NotificationInput struct {
+	UID   uint
+	Actor uint
+	Type  string
+}
+
 func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
-	input := Notification{}
+	input := NotificationInput{}
+
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else if notification, err := CreateMsg(input); err != nil {
+		return
+	}
+	actor, err := getUserInfo(input.Actor)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	notification := Notification{UID: input.UID, Type: input.Type}
+	switch input.Type {
+	case "follow":
+		notification.Message = fmt.Sprintf("%s starts following on you!", actor.Nickname)
+	case "comment":
+		notification.Message = fmt.Sprintf("%s comment on your post!", actor.Nickname)
+	}
+
+	if notification, err := CreateMsg(notification); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, notification)

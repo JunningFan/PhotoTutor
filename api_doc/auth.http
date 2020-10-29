@@ -1,5 +1,6 @@
 # @baseUrl =http://whiteboard.house:8000/user/
-@baseUrl =http://localhost:8000/user/
+# @baseUrl =http://localhost:8000/user/
+@baseUrl =http://localhost:8080/
 @token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNTUzODN9.C4uZ94p_kMpRYLpAwuwn3NciRfsUqABiZCYOM6enUOFxk0LPBc8fqW8989dt_U530mQqO5xQWrUe-FmDtNK_8Q
 @refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5NTIwOTgzfQ.WIOAvSqsOCWzbofqKNa_BIgKGW6Fy0PawZek_mZ_tkpc_PW7dRhEUig0QwapNKuGTIMV_Dk1B7kL0Yp1j-aviw
 ### Get user detail 
@@ -51,3 +52,9 @@ Accept: application/json
     "Refresh": "{{refresh}}"
 }
 
+### Get nicknames 
+POST {{baseUrl}}nicknames/
+
+{
+    "ids":[1,2,3,4,5]
+}

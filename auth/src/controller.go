@@ -55,6 +55,7 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 	srvr.PUT("", RequrieAuth(res.update))
 	srvr.POST("login/", res.login)
 	srvr.POST("refresh/", res.refresh)
+	srvr.POST("nicknames/", res.getNicknames)
 	srvr.GET(":id", res.getOne)
 	srvr.GET("", RequrieAuth(res.getCurrUser))
 	return res
@@ -201,5 +202,20 @@ func (uc *UserController) getCurrUser(uid uint, ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, user)
+	}
+}
+
+type idsInput struct {
+	IDs []uint `binding:"required"`
+}
+
+func (uc *UserController) getNicknames(ctx *gin.Context) {
+	var input idsInput
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else if ret, err := uc.userManager.ResolveNicknameByIds(input.IDs); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"data": ret})
 	}
 }

@@ -45,7 +45,7 @@ DELETE {{baseUrl}}9
 Authorization: {{auth}}
 
 ### Comment 
-POST {{baseUrl}}6/comment
+POST {{baseUrl}}1/comment
 Accept: application/json
 Authorization: {{auth}}
 

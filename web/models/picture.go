@@ -191,6 +191,7 @@ func (p *PictureManager) Comment(pid uint, comment Comment) (Comment, error) {
 	if res.Error != nil {
 		return Comment{}, res.Error
 	}
+	go notifyComment(comment.UID, pic.UserID)
 	go syncElsComment(comment)
 	return comment, nil
 }
@@ -220,6 +221,14 @@ func (p *PictureManager) syncElsVote(pid uint) {
 		fmt.Println("Sync Els Vote Error: ", err)
 	}
 	syncElsPicture(pic)
+}
+
+func notifyComment(actor, to uint) {
+	client.CreateNotification(client.NotificationInput{
+		UID:   to,
+		Actor: actor,
+		Type:  "comment",
+	})
 }
 
 func delElsPicture(pid uint) {
