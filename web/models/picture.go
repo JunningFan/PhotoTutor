@@ -20,6 +20,12 @@ type Comment struct {
 	UID       uint
 }
 
+type Vote struct {
+	PictureID uint `gorm:"primaryKey"`
+	UID       uint `gorm:"primaryKey"`
+	Like      bool
+}
+
 type Picture struct {
 	gorm.Model
 	Title  string
@@ -48,6 +54,11 @@ type Picture struct {
 	ImgSmall string
 	ImgBig   string
 
+	// for calculated filed
+	NLike    int64  `gorm:"-"`
+	NDislike int64  `gorm:"-"`
+	Votes    []Vote `json:"-"`
+
 	Tags []Tag `gorm:"many2many:picture_tag;"`
 	// has many tags
 	Comments []Comment `json:"-"`
@@ -73,6 +84,18 @@ type PictureInput struct {
 	Tags     []string
 }
 
+func (p *Picture) AfterFind(tx *gorm.DB) (err error) {
+	res := tx.Find(&Vote{PictureID: p.ID}).Where("Like = 1").Count(&p.NLike)
+	if res.Error != nil {
+		return res.Error
+	}
+	res = tx.Find(&Vote{PictureID: p.ID}).Where("Like = 0").Count(&p.NDislike)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
 type PictureManager struct{}
 
 func NewPictureManager() PictureManager {
@@ -81,8 +104,8 @@ func NewPictureManager() PictureManager {
 
 func (p *PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Debug().Joins("Location").Preload("Tags").Find(&pictures)
-	// print(conn.Debug().Association("Tag"))
+	res := conn.Joins("Location").Preload("Tags").Find(&pictures)
+	// print(conn.Association("Tag"))
 	return pictures, res.Error
 }
 
@@ -132,7 +155,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 // One Find the one picture
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
-	res := conn.Debug().Joins("Location").Preload("Tags").First(&picture, pid)
+	res := conn.Joins("Location").Preload("Tags").First(&picture, pid)
 	go incPicNView(picture)
 	return picture, res.Error
 }
@@ -153,7 +176,32 @@ func (p *PictureManager) Comment(pid uint, comment Comment) (Comment, error) {
 	return comment, nil
 }
 
+// Like a picture post
+func (p *PictureManager) Like(uid, pid uint) error {
+	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: true})
+	if res.Error != nil {
+		go p.syncElsVote(pid)
+	}
+	return res.Error
+}
+
+// Dislike a picture post
+func (p *PictureManager) Dislike(uid, pid uint) error {
+	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: false})
+	if res.Error != nil {
+		go p.syncElsVote(pid)
+	}
+	return res.Error
+}
+
 /* Coroutine function, all expected the caller has wrap these function in a coroutine */
+func (p *PictureManager) syncElsVote(pid uint) {
+	pic, err := p.One(pid)
+	if err != nil {
+		fmt.Println("Sync Els Vote Error: ", err)
+	}
+	syncElsPicture(pic)
+}
 
 func syncElsPicture(p Picture) {
 	client.PutElsObj(fmt.Sprintf("picture/_doc/%d", p.ID), p)
