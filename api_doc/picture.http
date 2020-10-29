@@ -1,5 +1,5 @@
-@baseUrl=http://localhost:8081/
-# @baseUrl=http://localhost:8000/picture/
+# @baseUrl=http://localhost:8081/
+@baseUrl=http://localhost:8000/picture/
 # @baseUrl=http://whiteboard.house:8000/picture/
 @auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNDQ4MTV9.pr-mH_7xqqjuQ5krOCsugsEyVDq48TRRoiAuZC2KMKu1Nb1JHmer4G1cMF5ZvwMuFYeSJY_HuDYzTZsUOx6p8g
 
@@ -12,7 +12,7 @@ GET {{baseUrl}}
 Accept: application/json
 
 ### Get Picture Detail
-GET {{baseUrl}}1
+GET {{baseUrl}}8
 Accept: application/json
 
 ### Post Picture
@@ -22,7 +22,7 @@ Authorization: {{auth}}
 
 {
 	"title": "helloworld",
-    "Img": 7,
+    "Img": 2,
     "lat": 3.44,
     "lng": 1.22,
     "location" : {
@@ -40,7 +40,9 @@ Authorization: {{auth}}
     "Tags": ["cloudy", "forest"]
 }
 
-
+### Delete a Picture
+DELETE {{baseUrl}}9
+Authorization: {{auth}}
 
 ### Comment 
 POST {{baseUrl}}6/comment

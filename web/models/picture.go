@@ -85,11 +85,11 @@ type PictureInput struct {
 }
 
 func (p *Picture) AfterFind(tx *gorm.DB) (err error) {
-	res := tx.Find(&Vote{PictureID: p.ID}).Where("Like = 1").Count(&p.NLike)
+	res := tx.Find(&Vote{PictureID: p.ID}).Where("like", true).Count(&p.NLike)
 	if res.Error != nil {
 		return res.Error
 	}
-	res = tx.Find(&Vote{PictureID: p.ID}).Where("Like = 0").Count(&p.NDislike)
+	res = tx.Find(&Vote{PictureID: p.ID}).Where("like", false).Count(&p.NDislike)
 	if res.Error != nil {
 		return res.Error
 	}
@@ -160,6 +160,25 @@ func (p *PictureManager) One(pid uint) (Picture, error) {
 	return picture, res.Error
 }
 
+// Delete a photo that belong to the user
+func (p *PictureManager) Delete(uid, pid uint) error {
+	var picture Picture
+	res := conn.First(&picture, pid)
+	if res.Error != nil {
+		return res.Error
+	}
+	if picture.UserID != uid {
+		return fmt.Errorf("you can't delete the post not belongs to you")
+	}
+	res = conn.Delete(&picture)
+	if res.Error != nil {
+		return res.Error
+	}
+	// delete the entry of elastic and back to user
+	go delElsPicture(picture.ID)
+	return nil
+}
+
 // Comment Make a comment to a picture
 func (p *PictureManager) Comment(pid uint, comment Comment) (Comment, error) {
 	pic, err := p.One(pid)
@@ -201,6 +220,10 @@ func (p *PictureManager) syncElsVote(pid uint) {
 		fmt.Println("Sync Els Vote Error: ", err)
 	}
 	syncElsPicture(pic)
+}
+
+func delElsPicture(pid uint) {
+	client.DelElsObj(fmt.Sprintf("picture/_doc/%d", pid))
 }
 
 func syncElsPicture(p Picture) {
