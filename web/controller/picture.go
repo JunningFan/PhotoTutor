@@ -45,11 +45,6 @@ func (p *PictureController) getAll(ctx *gin.Context) {
 }
 
 func (p *PictureController) insert(uid uint, ctx *gin.Context) {
-	// user, err := models.GetUserByID(uid)
-	// if err != nil {
-	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "user not exist"})
-	// 	return
-	// }
 	input := models.PictureInput{Uid: uid}
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
