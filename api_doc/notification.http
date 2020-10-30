@@ -1,0 +1,24 @@
+# @baseUrl=http://localhost:8084/
+# @baseUrl=http://localhost:8000/message/
+# @baseUrl=http://whiteboard.house:8000/picture/
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNDQ4MTV9.pr-mH_7xqqjuQ5krOCsugsEyVDq48TRRoiAuZC2KMKu1Nb1JHmer4G1cMF5ZvwMuFYeSJY_HuDYzTZsUOx6p8g
+
+### Get all this user's notifications
+GET {{baseUrl}}
+Accept: application/json
+Authorization: {{auth}}
+
+### Post a new notifications 
+POST {{baseUrl}}
+Accept: application/json
+
+{
+    "UID":1,
+    "Actor": 1,
+	"Type": "follow"
+}
+
+### removing a list of notifications 
+DELETE {{baseUrl}}2
+Accept: application/json
+Authorization: {{auth}}

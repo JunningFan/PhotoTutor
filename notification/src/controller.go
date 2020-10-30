@@ -77,7 +77,7 @@ func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	actor, err := getUserInfo(input.Actor)
+	actor, err := GetUserInfo(input.Actor)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
