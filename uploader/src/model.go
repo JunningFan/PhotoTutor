@@ -2,12 +2,13 @@ package src
 
 import (
 	"fmt"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"image"
 	"os"
 	"path"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type Img struct {
@@ -42,7 +43,6 @@ func Setup(DB_DSN string) {
 	//println("Finish set up databse conn dsn ", DB_DSN)
 }
 
-
 func AllocImgId(uid uint, suffix string) (uint, error) {
 	img := Img{Uid: uid, Suffix: suffix}
 	res := conn.Create(&img)
@@ -72,6 +72,6 @@ func (i *Img) getResloution() (uint, uint, error) {
 
 func First(pid uint) (Img, error) {
 	img := Img{}
-	res:= conn.First(&img, pid)
+	res := conn.First(&img, pid)
 	return img, res.Error
 }

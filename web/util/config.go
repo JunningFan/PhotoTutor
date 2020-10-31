@@ -8,11 +8,11 @@ const ImgSmallPath = ImgStaticPrefix + "small/"
 const ImgBigPath = ImgStaticPrefix + "big/"
 
 var (
-	DB_DSN   string
-	ELS_BASE string
-	IMG_SER  string
+	DB_DSN    string
+	ELS_BASE  string
+	NOTIF_SER string
+	IMG_SER   string
 )
-
 
 func SetUp() {
 	DB_DSN = os.Getenv("DB_DSN")
@@ -23,5 +23,10 @@ func SetUp() {
 	IMG_SER = os.Getenv("IMG_SER")
 	if IMG_SER == "" {
 		IMG_SER = "http://localhost:8083/"
+	}
+
+	NOTIF_SER = os.Getenv("NOTIF_SER")
+	if IMG_SER == "" {
+		IMG_SER = "http://localhost:8084/"
 	}
 }

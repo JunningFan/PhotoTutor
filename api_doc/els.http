@@ -1,7 +1,7 @@
-# @baseUrl=http://localhost:8000/els/picture/_search
-@baseUrl=http://whiteboard.house:8000/els/picture/_search
+@baseUrl=http://localhost:8000/els/
+# @baseUrl=http://whiteboard.house:8000/els/
 ### Get Picture By User
-POST {{baseUrl}}
+POST {{baseUrl}}picture/_search
 Content-Type: application/json
 
 {
@@ -15,7 +15,7 @@ Content-Type: application/json
 }
 
 ### Get Picture By User
-POST {{baseUrl}}
+POST {{baseUrl}}picture/_search
 Content-Type: application/json
 
 {
@@ -29,7 +29,7 @@ Content-Type: application/json
 }
 
 ### Search
-POST {{baseUrl}}
+POST {{baseUrl}}picture/_search
 Content-Type: application/json
 
 {
@@ -46,7 +46,7 @@ Content-Type: application/json
 }
 
 ### Geo base search
-POST {{baseUrl}}
+POST {{baseUrl}}picture/_search
 Content-Type: application/json
 
 {
@@ -65,5 +65,19 @@ Content-Type: application/json
         }
       }
     }
+  }
+}
+
+### Get Comment 
+GET  {{baseUrl}}comment/_search
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 10,
+  "query":{
+      "match": {
+          "PictureID": 6
+      }
   }
 }

@@ -10,7 +10,20 @@ import (
 )
 
 type Tag struct {
-	Name string `gorm:"primaryKey"`
+	Name string `gorm:"primaryKey";binding:"required"`
+}
+
+type Comment struct {
+	gorm.Model
+	PictureID uint
+	Message   string `binding:"required"`
+	UID       uint
+}
+
+type Vote struct {
+	PictureID uint `gorm:"primaryKey"`
+	UID       uint `gorm:"primaryKey"`
+	Like      bool
 }
 
 type Picture struct {
@@ -19,10 +32,6 @@ type Picture struct {
 	UserID uint
 	NView  uint // how many views
 
-	// `json:"-"`
-	// User   User
-	//Uid uint
-	// Img        string `json:"-"`
 	Lng        float64
 	Lat        float64
 	LocationID uint `json:"-"`
@@ -45,7 +54,14 @@ type Picture struct {
 	ImgSmall string
 	ImgBig   string
 
+	// for calculated filed
+	NLike    int64  `gorm:"-"`
+	NDislike int64  `gorm:"-"`
+	Votes    []Vote `json:"-"`
+
 	Tags []Tag `gorm:"many2many:picture_tag;"`
+	// has many tags
+	Comments []Comment `json:"-"`
 }
 
 type PictureInput struct {
@@ -68,6 +84,18 @@ type PictureInput struct {
 	Tags     []string
 }
 
+func (p *Picture) AfterFind(tx *gorm.DB) (err error) {
+	res := tx.Find(&Vote{PictureID: p.ID}).Where("like", true).Count(&p.NLike)
+	if res.Error != nil {
+		return res.Error
+	}
+	res = tx.Find(&Vote{PictureID: p.ID}).Where("like", false).Count(&p.NDislike)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
 type PictureManager struct{}
 
 func NewPictureManager() PictureManager {
@@ -76,14 +104,14 @@ func NewPictureManager() PictureManager {
 
 func (p *PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Debug().Joins("Location").Preload("Tags").Find(&pictures)
-	// print(conn.Debug().Association("Tag"))
+	res := conn.Joins("Location").Preload("Tags").Find(&pictures)
+	// print(conn.Association("Tag"))
 	return pictures, res.Error
 }
 
 func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 	//RPC to img server to get img info
-	imgInfo, err := client.GetImgInfo(input.Img)
+	imgInfo, err := client.GetImgInfo(input.Img, input.Uid)
 	if err != nil {
 		return Picture{}, err
 	}
@@ -120,26 +148,103 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		Tags:        tags,
 	}
 	res := conn.Create(&pic).Find(&pic)
-	go syncElsObj(pic)
+	go syncElsPicture(pic)
 	return pic, res.Error
 }
 
 // One Find the one picture
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
-	res := conn.Debug().Joins("Location").Preload("Tags").First(&picture, pid)
+	res := conn.Joins("Location").Preload("Tags").First(&picture, pid)
 	go incPicNView(picture)
 	return picture, res.Error
 }
 
-/* Coroutine function, all expected the caller has wrap these function in a coroutine */
+// Delete a photo that belong to the user
+func (p *PictureManager) Delete(uid, pid uint) error {
+	var picture Picture
+	res := conn.First(&picture, pid)
+	if res.Error != nil {
+		return res.Error
+	}
+	if picture.UserID != uid {
+		return fmt.Errorf("you can't delete the post not belongs to you")
+	}
+	res = conn.Delete(&picture)
+	if res.Error != nil {
+		return res.Error
+	}
+	// delete the entry of elastic and back to user
+	go delElsPicture(picture.ID)
+	return nil
+}
 
-func syncElsObj(p Picture) {
+// Comment Make a comment to a picture
+func (p *PictureManager) Comment(pid uint, comment Comment) (Comment, error) {
+	pic, err := p.One(pid)
+	if err != nil {
+		return Comment{}, err
+	}
+
+	comment.PictureID = pic.ID
+	res := conn.Save(&comment)
+	if res.Error != nil {
+		return Comment{}, res.Error
+	}
+	go notifyComment(comment.UID, pic.UserID)
+	go syncElsComment(comment)
+	return comment, nil
+}
+
+// Like a picture post
+func (p *PictureManager) Like(uid, pid uint) error {
+	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: true})
+	if res.Error != nil {
+		go p.syncElsVote(pid)
+	}
+	return res.Error
+}
+
+// Dislike a picture post
+func (p *PictureManager) Dislike(uid, pid uint) error {
+	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: false})
+	if res.Error != nil {
+		go p.syncElsVote(pid)
+	}
+	return res.Error
+}
+
+/* Coroutine function, all expected the caller has wrap these function in a coroutine */
+func (p *PictureManager) syncElsVote(pid uint) {
+	pic, err := p.One(pid)
+	if err != nil {
+		fmt.Println("Sync Els Vote Error: ", err)
+	}
+	syncElsPicture(pic)
+}
+
+func notifyComment(actor, to uint) {
+	client.CreateNotification(client.NotificationInput{
+		UID:   to,
+		Actor: actor,
+		Type:  "comment",
+	})
+}
+
+func delElsPicture(pid uint) {
+	client.DelElsObj(fmt.Sprintf("picture/_doc/%d", pid))
+}
+
+func syncElsPicture(p Picture) {
 	client.PutElsObj(fmt.Sprintf("picture/_doc/%d", p.ID), p)
+}
+
+func syncElsComment(c Comment) {
+	client.PutElsObj(fmt.Sprintf("comment/_doc/%d", c.ID), c)
 }
 
 func incPicNView(p Picture) {
 	p.NView++
 	conn.Model(&p).Update("NView", p.NView)
-	syncElsObj(p)
+	syncElsPicture(p)
 }

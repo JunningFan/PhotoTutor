@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 import requests
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+BASE_URL = "http://localhost:8000/"
+# BASE_URL = "http://whiteboard.house:8000/"
 
 response = requests.post(
-    "http://whiteboard.house:8000/user/login/",
+    BASE_URL + "user/login/",
     json={
         "username": "ttt1",
         "password": "apple123"
@@ -17,7 +19,7 @@ encoder = MultipartEncoder(fields={
 })
 
 response = requests.post(
-    "http://whiteboard.house:8000/upload/",
+    BASE_URL + "upload/",
     data=encoder,
     headers={
         "Authorization": access,

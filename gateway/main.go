@@ -44,6 +44,7 @@ func main() {
 	panicIf(addProxy("/user/", deployOrLocal("http://localhost:8080/", "http://auth:8080/")))
 	panicIf(addProxy("/picture/", deployOrLocal("http://localhost:8081/", "http://web:8081/")))
 	panicIf(addProxy("/upload/", deployOrLocal("http://localhost:8083/", "http://uploader:8083/")))
+	panicIf(addProxy("/message/", deployOrLocal("http://localhost:8084/", "http://notification:8084/")))
 	panicIf(addProxy("/els/", deployOrLocal("http://localhost:9200/", "http://elastic:9200/")))
 	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("./img"))))
 	http.HandleFunc("/", hello)

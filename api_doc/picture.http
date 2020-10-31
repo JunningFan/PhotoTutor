@@ -1,6 +1,7 @@
 # @baseUrl=http://localhost:8081/
-# @baseUrl=http://whiteboard.house:8000/picture/
 @baseUrl=http://localhost:8000/picture/
+# @baseUrl=http://whiteboard.house:8000/picture/
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNDQ4MTV9.pr-mH_7xqqjuQ5krOCsugsEyVDq48TRRoiAuZC2KMKu1Nb1JHmer4G1cMF5ZvwMuFYeSJY_HuDYzTZsUOx6p8g
 
 ### Hello World
 GET {{baseUrl}}
@@ -11,17 +12,17 @@ GET {{baseUrl}}
 Accept: application/json
 
 ### Get Picture Detail
-POST {{baseUrl}}1
+GET {{baseUrl}}8
 Accept: application/json
 
 ### Post Picture
 POST {{baseUrl}}
 Accept: application/json
-Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDM4MDcxMjJ9.k0vuSUqEADxjUrlJye7RLaQxUwagCx4Mxem7XJgLZQLuUg9aGrMzTAJZ6X5Lk-qVBF2wXy7isRl2wIlD0RZ1ZQ
+Authorization: {{auth}}
 
 {
 	"title": "helloworld",
-    "Img": 1,
+    "Img": 2,
     "lat": 3.44,
     "lng": 1.22,
     "location" : {
@@ -39,4 +40,31 @@ Authorization: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVl
     "Tags": ["cloudy", "forest"]
 }
 
+### Delete a Picture
+DELETE {{baseUrl}}9
+Authorization: {{auth}}
 
+### Comment 
+POST {{baseUrl}}1/comment
+Accept: application/json
+Authorization: {{auth}}
+
+{
+    "message":"I really like this photo!"
+}
+
+### 
+# Like and dislike always success unless the backend loss db connection or some edge cases 
+# One person only can choose one attitute - Like or dislike
+# Thus, the like count is unique by uid, pictureid and attitute. 
+# The count will be update to elastic search asynchronously
+### Like 
+POST {{baseUrl}}1/like
+Accept: application/json
+Authorization: {{auth}}
+
+
+### Dislike
+POST {{baseUrl}}1/dislike
+Accept: application/json
+Authorization: {{auth}}

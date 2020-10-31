@@ -14,6 +14,7 @@ services:
     environment:
       - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
       # - ELS_BASE=http://elastic:9200/
+      - IMG_SER=http://uploader:8083/
     depends_on:
       - db
   gateway:
@@ -32,6 +33,7 @@ services:
       - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
       - ELS_BASE=http://elastic:9200/
       - IMG_SER=http://uploader:8083/
+      - NOTIF_SER=http://notification:8084/
     depends_on:
       - auth
   uploader:
@@ -41,6 +43,14 @@ services:
       - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
     volumes:
       - ./img/:/root/app/img
+    depends_on:
+      - auth
+  notification:
+    build: notification
+    restart: always
+    environment:
+      - DB_DSN=user=postgres host=db password=apple123 dbname=postgres port=5432 sslmode=disable
+      - AUTH_SER=http://auth:8080/
     depends_on:
       - auth
   elastic:

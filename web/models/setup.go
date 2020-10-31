@@ -18,7 +18,9 @@ func Setup() {
 	} else {
 		fmt.Println(util.DB_DSN)
 		//	only support postgres connection
-		conn, err = gorm.Open(postgres.Open(util.DB_DSN), &gorm.Config{})
+		conn, err = gorm.Open(postgres.Open(util.DB_DSN), &gorm.Config{
+			PrepareStmt: true,
+		})
 	}
 	if err != nil {
 		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
@@ -26,7 +28,7 @@ func Setup() {
 	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	err = conn.AutoMigrate(&Location{}, &Picture{}, &Tag{})
+	err = conn.AutoMigrate(&Location{}, &Picture{}, &Tag{}, &Comment{}, &Vote{})
 	if err != nil {
 		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
 	}
