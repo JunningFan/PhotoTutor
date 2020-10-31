@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"log"
+	"bytes"
 )
 
 // ImgInfo of the image
@@ -16,12 +18,19 @@ type ImgInfo struct {
 	Small  string
 }
 
+type NotificationInput struct {
+	UID   uint
+	Actor uint
+	Type  string
+}
+
 // ErrorResp json type of remote error
 type ErrorResp struct {
 	Error string
 }
 
 var imgSer string
+var notifSer string
 
 //NewClient for remote img server
 func NewClient(server string) {
@@ -31,6 +40,15 @@ func NewClient(server string) {
 		imgSer = server
 	}
 }
+
+func NotifServ(server string) {
+	if server == "" {
+		notifSer = "http://localhost:8084/"
+	} else {
+		notifSer = server
+	}
+}
+
 
 func getImgInfo(id, uid uint) (ImgInfo, error) {
 	img := ImgInfo{}
@@ -66,4 +84,18 @@ func GetImgInfo(id, uid uint) (ImgInfo, error) {
 		err = fmt.Errorf("uploader: %v", err.Error())
 	}
 	return ImgInfo, err
+}
+
+// CreateNotification post a notification to remote
+func CreateNotification(v interface{}) {
+	
+	fmt.Println(notifSer)
+	fmt.Println("YEEET")
+	if jbytes, err := json.Marshal(v); err != nil {
+		log.Printf("Notification Marshal Err: %s\n", err.Error())
+	} else if resp, err := http.Post(notifSer, "application/json", bytes.NewReader(jbytes)); err != nil {
+		log.Printf("Notification Sync Err: %s\n", err.Error())
+	} else if err := resp.Body.Close(); err != nil {
+		log.Printf("Notification Close Fp Err: %s\n", err.Error())
+	}
 }

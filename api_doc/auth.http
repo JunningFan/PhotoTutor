@@ -1,7 +1,7 @@
 # @baseUrl =http://whiteboard.house:8000/user/
 # @baseUrl =http://localhost:8000/user/
 @baseUrl =http://localhost:8080/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMDI2MTh9.VSva0fg7nb_CfjFEyK4M46hr54pZo-kTHKK1Bpxk-LLyOp8Vbcrfpu1HsXLRLNXnJbP3WgRfp4nnhjv5cKXKPA
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMTczMTl9._tkSIxedgciM7EKMuscMfhp46h5cs2uB7TcpATQS9lbEORz00IutwPpReDcFh6ZAxzjhJ0xNKyTq_EnNQB0lXQ
 @refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5NjY1NDEzfQ.bv6Ng1yPOkE-8hkv75z6-kEPdn5ljmUuWmdB4ynBpVIQJiW9wHaPCwcirqgajFH-gwntQsS8JqMoFdt18eEX1A
 ### Get user detail 
 GET {{baseUrl}}2

@@ -17,9 +17,10 @@ func main() {
 	src.NewUserController(server.Group("/"))
 	src.Setup(os.Getenv("DB_DSN"))
 	src.NewClient(os.Getenv("IMG_SER"))
-
+	src.NotifServ(os.Getenv("NOTIF_SER"))
 	err := server.Run()
 	if err != nil {
 		println(err.Error())
 	}
 }
+

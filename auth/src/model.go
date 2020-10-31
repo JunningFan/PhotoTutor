@@ -3,7 +3,6 @@ package src
 import (
 	"fmt"
 	"time"
-
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -46,7 +45,8 @@ type User struct {
 	Nickname  string
 	Signature string
 	ImgLoc    string `gorm:"-" json:"img"`
-	Following []*User `gorm:"many2many:user_following"`
+	Following []*User  `gorm:"many2many:user_relation;foreignKey:ID;joinForeignKey:user_id;References:ID;joinReferences:follower_id"`
+	Followers []*User `gorm:"many2many:user_relation;foreignKey:ID;joinForeignKey:follower_id;References:ID;joinReferences:user_id"`
 }
 
 type UserRegisterInput struct {
@@ -122,6 +122,8 @@ func (um *UserManager) Login(input *UserLoginInput) (User, error) {
 	if err := user.CheckPassword(input.Password); err != nil {
 		return User{}, err
 	}
+	user.Following = FollowingList(user.ID)
+	user.Followers = FollowerList(user.ID)
 	return user, nil
 }
 
@@ -134,7 +136,8 @@ func (um *UserManager) GetUser(uid uint) (User, error) {
 func GetUserByID(uid uint) (User, error) {
 	var ret User
 	res := conn.First(&ret, uid)
-	ret.Following = FollowerList(uid)
+	ret.Following = FollowingList(uid)
+	ret.Followers = FollowerList(uid)
 	return ret, res.Error
 }
 
@@ -189,8 +192,17 @@ func (um *UserManager) AddFollower(uid uint, input UserFollowerInput) (User,erro
 		return User{}, fmt.Errorf("Cannot follow self")
 	} else {
 		conn.Model(&user).Association("Following").Append(&followID)
+		go notifyFollow(uid, followID.ID)
 		return user, nil
 	}
+}
+
+func notifyFollow(actor, to uint) {
+	CreateNotification(NotificationInput{
+		UID:   to,
+		Actor: actor,
+		Type:  "follow",
+	})
 }
 
 //Remove user from following list
@@ -212,8 +224,8 @@ func (um *UserManager) Unfollow(uid uint, input UserFollowerInput) (User,error) 
 	}
 }
 
-//Get follower list
-func FollowerList(uid uint) ([]*User) {
+//Get who the user is following 
+func FollowingList(uid uint) ([]*User) {
 	user := User{}
 	var userList []*User
 	if res := conn.Find(&user, uid); res.Error != nil {
@@ -223,3 +235,16 @@ func FollowerList(uid uint) ([]*User) {
 		return userList
 	}
 }
+
+//Get who is following the user
+func FollowerList(uid uint) ([]*User) {
+	user := User{}
+	var userList []*User
+	if res := conn.Find(&user, uid); res.Error != nil {
+		return userList
+	} else {
+		conn.Model(&user).Association("Followers").Find(&userList)
+		return userList
+	}
+}
+

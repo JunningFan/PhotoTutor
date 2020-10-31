@@ -60,6 +60,7 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 	srvr.POST("unfollow/", RequrieAuth(res.unfollow))
 	srvr.GET(":id", res.getOne)
 	srvr.GET("", RequrieAuth(res.getCurrUser))
+
 	return res
 }
 
@@ -247,14 +248,3 @@ func (uc *UserController) unfollow(uid uint, ctx *gin.Context) {
 	}
 }
 
-// func (uc *UserController) followerList(ctx *gin.Context) {
-// 	var input UserFollowerInput
-// 	if err := ctx.ShouldBindJSON(&input); err != nil {
-// 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	} else if user, err := uc.userManager.FollowerList(input); err != nil {
-// 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 	} else {
-// 		ctx.JSON(http.StatusOK, user)
-// 	}
-// }
