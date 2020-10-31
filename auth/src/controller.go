@@ -243,7 +243,7 @@ func (uc *UserController) unfollow(uid uint, ctx *gin.Context) {
 	if err := uc.userManager.Unfollow(uid, input.FollowID); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, gin.H{"data": "Followed"})
+		ctx.JSON(http.StatusOK, gin.H{"data": "Unfollowed"})
 	}
 }
 

@@ -190,11 +190,19 @@ func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
 func (um *UserManager) AddFollower(uid uint, followID uint) error {
 	res := conn.Create(&User_Relations{User_id: uid, Following_id: followID})
 	if res.Error != nil {
-	//	go p.syncElsVote(pid)
+		return res.Error
 	}
-	return res.Error
+	return nil
 }
 
+//Remove user from following list
+func (um *UserManager) Unfollow(uid uint, followID uint) error {
+	res := conn.Delete(&User_Relations{User_id: uid, Following_id: followID})
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
 
 func notifyFollow(actor, to uint) {
 	CreateNotification(NotificationInput{
@@ -204,6 +212,7 @@ func notifyFollow(actor, to uint) {
 	})
 }
 
+//Update following and follower count
 func (u *User) AfterFind(tx *gorm.DB) (err error) {
 	res := tx.Find(&User_Relations{User_id: u.ID}).Count(&u.NFollowing)
 	if res.Error != nil {
@@ -216,17 +225,9 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 	return nil
 }
 
-//Remove user from following list
-//Add user to following list
-func (um *UserManager) Unfollow(uid uint, followID uint) error {
-	res := conn.Delete(&User_Relations{User_id: uid, Following_id: followID})
-	if res.Error != nil {
-	//	go p.syncElsVote(pid)
-	}
-	return res.Error
-}
 
-//Get who the user is following 
+
+//Get list of who the user is following
 func (um *UserManager) FollowingList(uid uint) ([]User,error) {
 	var userList []User
 	
@@ -237,11 +238,10 @@ func (um *UserManager) FollowingList(uid uint) ([]User,error) {
 	return userList, nil
 }
 
-//Get who is follower the user
+//Get list of people following the user
 func (um *UserManager) FollowerList(uid uint) ([]User,error) {
 	var userList []User
 	ret := conn.Joins("left join User_Relations on Users.id = User_Relations.user_id").Where("User_Relations.Following_id = ?",uid).Find(&userList)
-	//ret := conn.Model(&User{}).Select("Users.*").Joins("left join User_Relations on Users.id = User_Relations.user_id").Where("User_Relations.Following_id = ?",uid).Scan(&userList)
 	if ret.Error != nil {
 		return userList, ret.Error
 	}
