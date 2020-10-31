@@ -90,7 +90,6 @@ func GetImgInfo(id, uid uint) (ImgInfo, error) {
 func CreateNotification(v interface{}) {
 	
 	fmt.Println(notifSer)
-	fmt.Println("YEEET")
 	if jbytes, err := json.Marshal(v); err != nil {
 		log.Printf("Notification Marshal Err: %s\n", err.Error())
 	} else if resp, err := http.Post(notifSer, "application/json", bytes.NewReader(jbytes)); err != nil {
