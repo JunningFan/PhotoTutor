@@ -1,5 +1,15 @@
-@baseUrl=http://localhost:8000/els/
-# @baseUrl=http://whiteboard.house:8000/els/
+# @baseUrl=http://localhost:8000/els/
+@baseUrl=http://whiteboard.house:8000/els/
+
+### Get all and pagination
+POST {{baseUrl}}picture/_search
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 10
+}
+
 ### Get Picture By User
 POST {{baseUrl}}picture/_search
 Content-Type: application/json
@@ -44,6 +54,7 @@ Content-Type: application/json
     }
   }
 }
+
 
 ### Geo base search
 POST {{baseUrl}}picture/_search

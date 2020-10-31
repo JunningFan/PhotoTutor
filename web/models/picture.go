@@ -45,6 +45,7 @@ type Picture struct {
 	Timestamp    time.Time
 	Orientation  float64
 	Elevation    float64
+	Weather      string
 
 	// fill while creating the picture obj
 	Height uint
@@ -78,6 +79,7 @@ type PictureInput struct {
 	Timestamp    uint
 	Orientation  float64
 	Elevation    float64
+	Weather      string
 
 	Location Location
 	Img      uint `binding:"required"`
@@ -145,6 +147,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 		// Timestamp:   input.Timestamp,
 		Orientation: input.Orientation,
 		Elevation:   input.Elevation,
+		Weather:     input.Weather,
 		Tags:        tags,
 	}
 	res := conn.Create(&pic).Find(&pic)

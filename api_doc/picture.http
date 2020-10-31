@@ -1,7 +1,7 @@
-# @baseUrl=http://localhost:8081/
-@baseUrl=http://localhost:8000/picture/
+@baseUrl=http://localhost:8081/
+# @baseUrl=http://localhost:8000/picture/
 # @baseUrl=http://whiteboard.house:8000/picture/
-@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNDQ4MTV9.pr-mH_7xqqjuQ5krOCsugsEyVDq48TRRoiAuZC2KMKu1Nb1JHmer4G1cMF5ZvwMuFYeSJY_HuDYzTZsUOx6p8g
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMjQyOTF9.nUscEurD8K7yGbD9lXtm1Aaoa_b3sSqpIDk3M968haC3MUn17MkUtYYF-LNsZ5dwAXwQ2OcYZ_AhUBTb8elTOw
 
 ### Hello World
 GET {{baseUrl}}
@@ -12,7 +12,7 @@ GET {{baseUrl}}
 Accept: application/json
 
 ### Get Picture Detail
-GET {{baseUrl}}8
+GET {{baseUrl}}3
 Accept: application/json
 
 ### Post Picture
@@ -37,6 +37,7 @@ Authorization: {{auth}}
     "Timestamp":2147483647,
     "Orientation": 24,
     "Elevation": 123.43,
+    "Weather":"cloudy",
     "Tags": ["cloudy", "forest"]
 }
 
