@@ -1,10 +1,10 @@
 # @baseUrl =http://whiteboard.house:8000/user/
 # @baseUrl =http://localhost:8000/user/
 @baseUrl =http://localhost:8080/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNTUzODN9.C4uZ94p_kMpRYLpAwuwn3NciRfsUqABiZCYOM6enUOFxk0LPBc8fqW8989dt_U530mQqO5xQWrUe-FmDtNK_8Q
-@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5NTIwOTgzfQ.WIOAvSqsOCWzbofqKNa_BIgKGW6Fy0PawZek_mZ_tkpc_PW7dRhEUig0QwapNKuGTIMV_Dk1B7kL0Yp1j-aviw
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMDI2MTh9.VSva0fg7nb_CfjFEyK4M46hr54pZo-kTHKK1Bpxk-LLyOp8Vbcrfpu1HsXLRLNXnJbP3WgRfp4nnhjv5cKXKPA
+@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5NjY1NDEzfQ.bv6Ng1yPOkE-8hkv75z6-kEPdn5ljmUuWmdB4ynBpVIQJiW9wHaPCwcirqgajFH-gwntQsS8JqMoFdt18eEX1A
 ### Get user detail 
-GET {{baseUrl}}1
+GET {{baseUrl}}2
 Accept: application/json
 
 ### Reigster
@@ -12,9 +12,9 @@ POST {{baseUrl}}
 Accept: application/json
 
 {
-	"username": "ttt1",
-    "password": "apple123",
-    "nickname": "apple"
+	"username": "test",
+    "password": "test",
+    "nickname": "test"
 }
 
 
@@ -23,8 +23,8 @@ POST {{baseUrl}}login/
 Accept: application/json
 
 {
-	"username": "ttt1",
-    "password": "apple123"
+	"username": "test",
+    "password": "test"
 }
 
 ### Check info
@@ -57,4 +57,23 @@ POST {{baseUrl}}nicknames/
 
 {
     "ids":[1,2,3,4,5]
+}
+
+### Add Follower
+POST {{baseUrl}}follow/
+Accept: application/json
+Authorization: {{token}}
+
+{
+    "Following":1
+}
+
+
+### Remove Follower
+POST {{baseUrl}}unfollow/
+Accept: application/json
+Authorization: {{token}}
+
+{
+    "Following":1
 }

@@ -46,6 +46,7 @@ type User struct {
 	Nickname  string
 	Signature string
 	ImgLoc    string `gorm:"-" json:"img"`
+	Following []*User `gorm:"many2many:user_following"`
 }
 
 type UserRegisterInput struct {
@@ -68,6 +69,10 @@ type UserUpdateInput struct {
 	Nickname  string `binding:"required"`
 	Signature string `binding:"required"`
 	Img       uint   `binding:"required"`
+}
+
+type UserFollowerInput struct {
+	Following uint `binding:"required"`
 }
 
 type UserManager struct{}
@@ -129,6 +134,7 @@ func (um *UserManager) GetUser(uid uint) (User, error) {
 func GetUserByID(uid uint) (User, error) {
 	var ret User
 	res := conn.First(&ret, uid)
+	ret.Following = FollowerList(uid)
 	return ret, res.Error
 }
 
@@ -165,4 +171,55 @@ func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
 	var ret []NicknameMap
 	res := conn.Find(&User{}, ids).Order("id ASC").Pluck("nickname", &ret)
 	return ret, res.Error
+}
+
+//Add user to following list
+func (um *UserManager) AddFollower(uid uint, input UserFollowerInput) (User,error) {
+	user := User{}
+	followID,err := GetUserByID(input.Following)
+
+	if err != nil{
+		return User{}, err
+	}
+	if res := conn.Find(&user, uid); res.Error != nil {
+		return User{}, res.Error
+	} else if  res := conn.Find(&followID, followID.ID); res.Error != nil {
+		return User{}, res.Error
+	} else if  uid == followID.ID {
+		return User{}, fmt.Errorf("Cannot follow self")
+	} else {
+		conn.Model(&user).Association("Following").Append(&followID)
+		return user, nil
+	}
+}
+
+//Remove user from following list
+func (um *UserManager) Unfollow(uid uint, input UserFollowerInput) (User,error) {
+	user := User{}
+	followUser := User{}
+	followID,err := GetUserByID(input.Following)
+
+	if err != nil{
+		return User{}, err
+	}
+	if res := conn.Find(&user, uid); res.Error != nil {
+		return User{}, res.Error
+	} else if  res := conn.Find(&followUser, followID); res.Error != nil {
+		return User{}, res.Error
+	} else {
+		conn.Model(&user).Association("Following").Delete(&followUser)
+		return user, nil
+	}
+}
+
+//Get follower list
+func FollowerList(uid uint) ([]*User) {
+	user := User{}
+	var userList []*User
+	if res := conn.Find(&user, uid); res.Error != nil {
+		return userList
+	} else {
+		conn.Model(&user).Association("Following").Find(&userList)
+		return userList
+	}
 }

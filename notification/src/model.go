@@ -61,3 +61,4 @@ func RemoveMsgList(uid, lastID uint) error {
 	res := conn.Where("id <= ? AND uid = ?", lastID, uid).Delete(Notification{})
 	return res.Error
 }
+

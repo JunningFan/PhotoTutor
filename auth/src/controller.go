@@ -56,6 +56,8 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 	srvr.POST("login/", res.login)
 	srvr.POST("refresh/", res.refresh)
 	srvr.POST("nicknames/", res.getNicknames)
+	srvr.POST("follow/", RequrieAuth(res.addFollower))
+	srvr.POST("unfollow/", RequrieAuth(res.unfollow))
 	srvr.GET(":id", res.getOne)
 	srvr.GET("", RequrieAuth(res.getCurrUser))
 	return res
@@ -219,3 +221,40 @@ func (uc *UserController) getNicknames(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"data": ret})
 	}
 }
+
+
+func (uc *UserController) addFollower(uid uint, ctx *gin.Context) {
+	var input UserFollowerInput
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else if user, err := uc.userManager.AddFollower(uid, input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, user)
+	}
+}
+
+func (uc *UserController) unfollow(uid uint, ctx *gin.Context) {
+	var input UserFollowerInput
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else if user, err := uc.userManager.Unfollow(uid, input); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, user)
+	}
+}
+
+// func (uc *UserController) followerList(ctx *gin.Context) {
+// 	var input UserFollowerInput
+// 	if err := ctx.ShouldBindJSON(&input); err != nil {
+// 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	} else if user, err := uc.userManager.FollowerList(input); err != nil {
+// 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 	} else {
+// 		ctx.JSON(http.StatusOK, user)
+// 	}
+// }
