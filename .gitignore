@@ -1,3 +1,7 @@
 db/
 img/
 
+auth/auth.exe
+notification/notification.exe
+web/main.exe
+web/shell.exe
