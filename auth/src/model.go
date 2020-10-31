@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -15,8 +16,11 @@ var (
 
 func Setup(DB_DSN string) {
 	var err error
+	
 	if DB_DSN == "" {
-		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
 	} else {
 		fmt.Println(DB_DSN)
 		//	only support postgres connection
@@ -28,7 +32,8 @@ func Setup(DB_DSN string) {
 	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	err = conn.AutoMigrate(&User{})
+	err = conn.AutoMigrate(&User{},&User_Relations{})
+
 	if err != nil {
 		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
 	}
@@ -45,8 +50,14 @@ type User struct {
 	Nickname  string
 	Signature string
 	ImgLoc    string `gorm:"-" json:"img"`
-	Following []*User  `gorm:"many2many:user_relation;foreignKey:ID;joinForeignKey:user_id;References:ID;joinReferences:follower_id"`
-	Followers []*User `gorm:"many2many:user_relation;foreignKey:ID;joinForeignKey:follower_id;References:ID;joinReferences:user_id"`
+	NFollowers int64  `gorm:"-"`
+	NFollowing int64  `gorm:"-"`
+
+}
+
+type User_Relations struct {
+	User_id        uint `gorm:"primary_key"`
+	Following_id   uint `gorm:"primary_key"`
 }
 
 type UserRegisterInput struct {
@@ -70,9 +81,8 @@ type UserUpdateInput struct {
 	Signature string `binding:"required"`
 	Img       uint   `binding:"required"`
 }
-
-type UserFollowerInput struct {
-	Following uint `binding:"required"`
+type FollowInput struct {
+	FollowID uint `binding:"required"`
 }
 
 type UserManager struct{}
@@ -122,8 +132,8 @@ func (um *UserManager) Login(input *UserLoginInput) (User, error) {
 	if err := user.CheckPassword(input.Password); err != nil {
 		return User{}, err
 	}
-	user.Following = FollowingList(user.ID)
-	user.Followers = FollowerList(user.ID)
+	//user.Following = FollowingList(user.ID)
+	//user.Followers = FollowerList(user.ID)
 	return user, nil
 }
 
@@ -136,8 +146,8 @@ func (um *UserManager) GetUser(uid uint) (User, error) {
 func GetUserByID(uid uint) (User, error) {
 	var ret User
 	res := conn.First(&ret, uid)
-	ret.Following = FollowingList(uid)
-	ret.Followers = FollowerList(uid)
+	//ret.Following = FollowingList(uid)
+	//ret.Followers = FollowerList(uid)
 	return ret, res.Error
 }
 
@@ -177,25 +187,14 @@ func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
 }
 
 //Add user to following list
-func (um *UserManager) AddFollower(uid uint, input UserFollowerInput) (User,error) {
-	user := User{}
-	followID,err := GetUserByID(input.Following)
-
-	if err != nil{
-		return User{}, err
+func (um *UserManager) AddFollower(uid uint, followID uint) error {
+	res := conn.Create(&User_Relations{User_id: uid, Following_id: followID})
+	if res.Error != nil {
+	//	go p.syncElsVote(pid)
 	}
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return User{}, res.Error
-	} else if  res := conn.Find(&followID, followID.ID); res.Error != nil {
-		return User{}, res.Error
-	} else if  uid == followID.ID {
-		return User{}, fmt.Errorf("Cannot follow self")
-	} else {
-		conn.Model(&user).Association("Following").Append(&followID)
-		go notifyFollow(uid, followID.ID)
-		return user, nil
-	}
+	return res.Error
 }
+
 
 func notifyFollow(actor, to uint) {
 	CreateNotification(NotificationInput{
@@ -205,46 +204,47 @@ func notifyFollow(actor, to uint) {
 	})
 }
 
-//Remove user from following list
-func (um *UserManager) Unfollow(uid uint, input UserFollowerInput) (User,error) {
-	user := User{}
-	followUser := User{}
-	followID,err := GetUserByID(input.Following)
+func (u *User) AfterFind(tx *gorm.DB) (err error) {
+	res := tx.Find(&User_Relations{User_id: u.ID}).Count(&u.NFollowing)
+	if res.Error != nil {
+		return res.Error
+	}
+	res = tx.Find(&User_Relations{Following_id: u.ID}).Count(&u.NFollowers)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
 
-	if err != nil{
-		return User{}, err
+//Remove user from following list
+//Add user to following list
+func (um *UserManager) Unfollow(uid uint, followID uint) error {
+	res := conn.Delete(&User_Relations{User_id: uid, Following_id: followID})
+	if res.Error != nil {
+	//	go p.syncElsVote(pid)
 	}
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return User{}, res.Error
-	} else if  res := conn.Find(&followUser, followID); res.Error != nil {
-		return User{}, res.Error
-	} else {
-		conn.Model(&user).Association("Following").Delete(&followUser)
-		return user, nil
-	}
+	return res.Error
 }
 
 //Get who the user is following 
-func FollowingList(uid uint) ([]*User) {
-	user := User{}
-	var userList []*User
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return userList
-	} else {
-		conn.Model(&user).Association("Following").Find(&userList)
-		return userList
+func (um *UserManager) FollowingList(uid uint) ([]User,error) {
+	var userList []User
+	
+	ret := conn.Joins("left join User_Relations on Users.id = User_Relations.Following_id").Where("User_Relations.user_id = ?",uid).Find(&userList)
+	if ret.Error != nil {
+		return userList, ret.Error
 	}
+	return userList, nil
 }
 
-//Get who is following the user
-func FollowerList(uid uint) ([]*User) {
-	user := User{}
-	var userList []*User
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return userList
-	} else {
-		conn.Model(&user).Association("Followers").Find(&userList)
-		return userList
+//Get who is follower the user
+func (um *UserManager) FollowerList(uid uint) ([]User,error) {
+	var userList []User
+	ret := conn.Joins("left join User_Relations on Users.id = User_Relations.user_id").Where("User_Relations.Following_id = ?",uid).Find(&userList)
+	//ret := conn.Model(&User{}).Select("Users.*").Joins("left join User_Relations on Users.id = User_Relations.user_id").Where("User_Relations.Following_id = ?",uid).Scan(&userList)
+	if ret.Error != nil {
+		return userList, ret.Error
 	}
+	return userList, nil
 }
 

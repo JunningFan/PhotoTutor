@@ -56,11 +56,12 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 	srvr.POST("login/", res.login)
 	srvr.POST("refresh/", res.refresh)
 	srvr.POST("nicknames/", res.getNicknames)
-	srvr.POST("follow/", RequrieAuth(res.addFollower))
-	srvr.POST("unfollow/", RequrieAuth(res.unfollow))
 	srvr.GET(":id", res.getOne)
 	srvr.GET("", RequrieAuth(res.getCurrUser))
-
+	srvr.POST("follow/:id", RequrieAuth(res.addFollower))
+	srvr.POST("followers/", res.getFollowers)
+	srvr.POST("following/", res.getFollowing)
+	srvr.DELETE("unfollow/:id/", RequrieAuth(res.unfollow))
 	return res
 }
 
@@ -225,26 +226,43 @@ func (uc *UserController) getNicknames(ctx *gin.Context) {
 
 
 func (uc *UserController) addFollower(uid uint, ctx *gin.Context) {
-	var input UserFollowerInput
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	} else if user, err := uc.userManager.AddFollower(uid, input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var input FollowInput
+	ctx.ShouldBindJSON(&input)
+
+	if err := uc.userManager.AddFollower(uid, input.FollowID); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		ctx.JSON(http.StatusOK, gin.H{"data": "Followed"})
 	}
 }
 
 func (uc *UserController) unfollow(uid uint, ctx *gin.Context) {
-	var input UserFollowerInput
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	} else if user, err := uc.userManager.Unfollow(uid, input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var input FollowInput
+	ctx.ShouldBindJSON(&input)
+	
+	if err := uc.userManager.Unfollow(uid, input.FollowID); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		ctx.JSON(http.StatusOK, gin.H{"data": "Followed"})
 	}
 }
 
+func (uc *UserController) getFollowing(ctx *gin.Context) {
+	var input FollowInput
+	ctx.ShouldBindJSON(&input)
+	if users, err := uc.userManager.FollowingList(input.FollowID); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, users)
+	}
+}
+
+func (uc *UserController) getFollowers(ctx *gin.Context) {
+	var input FollowInput
+	ctx.ShouldBindJSON(&input)
+	if users, err := uc.userManager.FollowerList(input.FollowID); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, users)
+	}
+}

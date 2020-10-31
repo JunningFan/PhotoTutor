@@ -1,7 +1,7 @@
 # @baseUrl =http://whiteboard.house:8000/user/
 # @baseUrl =http://localhost:8000/user/
 @baseUrl =http://localhost:8080/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMTczMTl9._tkSIxedgciM7EKMuscMfhp46h5cs2uB7TcpATQS9lbEORz00IutwPpReDcFh6ZAxzjhJ0xNKyTq_EnNQB0lXQ
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMjc2NTV9.1DkAQoNqfpHlM9EHUP2pC9i5JGO5FAFJQUEjiFFoh7848s4Leblyva0K1pUxM0jXwOCPRN2C6MBzbK4HCmWMzg
 @refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5NjY1NDEzfQ.bv6Ng1yPOkE-8hkv75z6-kEPdn5ljmUuWmdB4ynBpVIQJiW9wHaPCwcirqgajFH-gwntQsS8JqMoFdt18eEX1A
 ### Get user detail 
 GET {{baseUrl}}2
@@ -60,20 +60,36 @@ POST {{baseUrl}}nicknames/
 }
 
 ### Add Follower
-POST {{baseUrl}}follow/
+POST {{baseUrl}}follow/2/
 Accept: application/json
 Authorization: {{token}}
 
 {
-    "Following":1
+    "FollowID":1
 }
 
 
 ### Remove Follower
-POST {{baseUrl}}unfollow/
+DELETE {{baseUrl}}unfollow/2/
 Accept: application/json
 Authorization: {{token}}
 
 {
-    "Following":1
+    "FollowID":1
+}
+
+### Who is following the user
+POST {{baseUrl}}followers/
+Accept: application/json
+
+{
+    "FollowID":2
+}
+
+### Who is the user following
+POST {{baseUrl}}following/
+Accept: application/json
+
+{
+    "FollowID":2
 }
