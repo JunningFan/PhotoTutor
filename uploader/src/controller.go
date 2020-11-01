@@ -156,16 +156,25 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 	}
 	imgName := fmt.Sprintf("%d.%s", imgId, suffix)
 	out, err = os.Create(path.Join(ImgBigPath, imgName))
-	defer out.Close()
+
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("creat fileReader failed %s", err.Error())})
+		conn.Delete(&Img{Id: imgId})
 		return
 	}
 	_, err = io.Copy(out, fileReader)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("io filed %s", err.Error())})
+		conn.Delete(&Img{Id: imgId})
+		return
+	}
+	err = out.Close()
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("io filed %s", err.Error())})
+		conn.Delete(&Img{Id: imgId})
 		return
 	}
 
