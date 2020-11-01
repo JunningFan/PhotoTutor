@@ -6,7 +6,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -84,6 +83,7 @@ func checkSuffix(suffix *string) bool {
 func (i *ImgController) mkThumbnail(path string, imgType string) {
 	img, err := getBigImgByName(path, imgType)
 	if err != nil {
+		fmt.Println(err.Error())
 		return
 	}
 	thImg := resize.Thumbnail(512, 512, img, resize.Bilinear)
@@ -93,7 +93,7 @@ func (i *ImgController) mkThumbnail(path string, imgType string) {
 func putSmallImgByImg(img image.Image, imgName string, imgType string) {
 	out, err := os.Create(path.Join(ImgSmallPath, imgName))
 	if err != nil {
-		log.Println(err.Error())
+		fmt.Println(err.Error())
 	}
 	defer out.Close()
 
@@ -104,7 +104,7 @@ func putSmallImgByImg(img image.Image, imgName string, imgType string) {
 		err = png.Encode(out, img)
 	}
 	if err != nil {
-		log.Println(err.Error())
+		fmt.Println(err.Error())
 	}
 }
 
