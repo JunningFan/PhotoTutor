@@ -12,8 +12,8 @@ import (
 )
 
 type Img struct {
-	Id     uint
-	Uid    uint
+	ID     uint `gorm:"primaryKey"`
+	UID    uint
 	Suffix string
 }
 
@@ -44,20 +44,20 @@ func Setup(DB_DSN string) {
 }
 
 func AllocImgId(uid uint, suffix string) (uint, error) {
-	img := Img{Uid: uid, Suffix: suffix}
+	img := Img{UID: uid, Suffix: suffix}
 	res := conn.Create(&img)
-	return img.Id, res.Error
+	return img.ID, res.Error
 }
 
 func (i *Img) GetImgFileName(uid uint) (string, error) {
-	if uid != i.Uid {
+	if uid != i.UID {
 		return "", fmt.Errorf("not premit to use this picture")
 	}
 	return i.picFileName(), nil
 }
 
 func (i *Img) picFileName() string {
-	return fmt.Sprintf("%d.%s", i.Id, i.Suffix)
+	return fmt.Sprintf("%d.%s", i.ID, i.Suffix)
 }
 
 func (i *Img) getResloution() (uint, uint, error) {

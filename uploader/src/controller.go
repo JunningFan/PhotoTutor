@@ -160,21 +160,21 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("creat fileReader failed %s", err.Error())})
-		conn.Delete(&Img{Id: imgId})
+		conn.Delete(&Img{ID: imgId})
 		return
 	}
 	_, err = io.Copy(out, fileReader)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("io filed %s", err.Error())})
-		conn.Delete(&Img{Id: imgId})
+		conn.Delete(&Img{ID: imgId})
 		return
 	}
 	err = out.Close()
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("io filed %s", err.Error())})
-		conn.Delete(&Img{Id: imgId})
+		conn.Delete(&Img{ID: imgId})
 		return
 	}
 
@@ -192,11 +192,11 @@ func (c *ImgController) getPath(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
-			"uid":    i.Uid,
+			"uid":    i.UID,
 			"height": height,
 			"width":  width,
-			"big":    fmt.Sprintf("%s%d.%s", ImgBigPath, i.Id, i.Suffix),
-			"small":  fmt.Sprintf("%s%d.%s", ImgSmallPath, i.Id, i.Suffix),
+			"big":    fmt.Sprintf("%s%d.%s", ImgBigPath, i.ID, i.Suffix),
+			"small":  fmt.Sprintf("%s%d.%s", ImgSmallPath, i.ID, i.Suffix),
 		})
 	}
 }
