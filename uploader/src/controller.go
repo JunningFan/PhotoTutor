@@ -86,7 +86,7 @@ func (i *ImgController) mkThumbnail(path string, imgType string) {
 		fmt.Println(err.Error())
 		return
 	}
-	thImg := resize.Thumbnail(512, 512, img, resize.Bilinear)
+	thImg := resize.Thumbnail(256, 256, img, resize.Bilinear)
 	putSmallImgByImg(thImg, path, imgType)
 }
 
