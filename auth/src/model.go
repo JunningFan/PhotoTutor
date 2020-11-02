@@ -1,44 +1,22 @@
 package src
 
 import (
+	"context"
 	"fmt"
-	"time"
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"time"
 )
 
 var (
 	conn *gorm.DB
+	rdb *redis.Client
+	redisCtx = context.Background()
 )
-
-func Setup(DB_DSN string) {
-	var err error
-	
-	if DB_DSN == "" {
-		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info),
-		})
-	} else {
-		fmt.Println(DB_DSN)
-		//	only support postgres connection
-		conn, err = gorm.Open(postgres.Open(DB_DSN), &gorm.Config{})
-	}
-	if err != nil {
-		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
-	}
-	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
-
-	//register objects
-	err = conn.AutoMigrate(&User{},&User_Relations{})
-
-	if err != nil {
-		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
-	}
-	//println("Finish set up databse conn dsn ", DB_DSN)
-}
 
 type User struct {
 	ID        uint `gorm:"primary_key"`
@@ -52,12 +30,11 @@ type User struct {
 	ImgLoc    string `gorm:"-" json:"img"`
 	NFollowers int64  `gorm:"-"`
 	NFollowing int64  `gorm:"-"`
-
 }
 
-type User_Relations struct {
-	User_id        uint `gorm:"primary_key"`
-	Following_id   uint `gorm:"primary_key"`
+type UserRelation struct {
+	UserId      uint `gorm:"primary_key"`
+	FollowingId uint `gorm:"primary_key"`
 }
 
 type UserRegisterInput struct {
@@ -81,8 +58,40 @@ type UserUpdateInput struct {
 	Signature string `binding:"required"`
 	Img       uint   `binding:"required"`
 }
-type FollowInput struct {
-	FollowID uint `binding:"required"`
+
+func Setup(DB_DSN, redisSer string) {
+	var err error
+	if redisSer == ""{
+		redisSer = "localhost:6379"
+	}
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     redisSer,
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	if DB_DSN == "" {
+		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
+	} else {
+		fmt.Println(DB_DSN)
+		//	only support postgres connection
+		conn, err = gorm.Open(postgres.Open(DB_DSN), &gorm.Config{})
+	}
+	if err != nil {
+		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
+	}
+	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
+
+	//register objects
+	err = conn.AutoMigrate(&User{},&UserRelation{})
+
+	if err != nil {
+		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
+	}
+	//println("Finish set up databse conn dsn ", DB_DSN)
 }
 
 type UserManager struct{}
@@ -109,9 +118,13 @@ func (u *User) CheckPassword(password string) error {
 	return nil
 }
 
-// Create Create user with given user input
+// Create user with given user input
 func (um *UserManager) Create(input *UserRegisterInput) (User, error) {
-	user := User{Username: input.Username, Nickname: input.Nickname}
+	user := User{
+		Username: input.Username,
+		Nickname: input.Nickname,
+		ImgLoc: "img/small/avatar.png",
+	}
 	if err := user.SetPassword(input.Password); err != nil {
 		return User{}, err
 	}
@@ -186,18 +199,35 @@ func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
 	return ret, res.Error
 }
 
-//Add user to following list
-func (um *UserManager) AddFollower(uid uint, followID uint) error {
-	res := conn.Create(&User_Relations{User_id: uid, Following_id: followID})
+func checkExist(uid uint) bool {
+	var count int64;
+	res := conn.Find(&User{}, uid).Count(&count )
+	if res.Error != nil || count == 0 {
+		return false
+	}
+	return true
+}
+
+
+//Follow Add user to following list
+func (um *UserManager) Follow(uid uint, followID uint) error {
+	if uid == followID {
+		return fmt.Errorf("you cannot follow yourself")
+	}
+	if checkExist(followID) == false{
+		return fmt.Errorf("the user %d does not exist", followID)
+	}
+	res := conn.Create(&UserRelation{UserId: uid, FollowingId: followID})
 	if res.Error != nil {
 		return res.Error
 	}
+	go notifyFollow(uid, followID)
 	return nil
 }
 
-//Remove user from following list
+//Unfollow Remove user from following list
 func (um *UserManager) Unfollow(uid uint, followID uint) error {
-	res := conn.Delete(&User_Relations{User_id: uid, Following_id: followID})
+	res := conn.Delete(&UserRelation{UserId: uid, FollowingId: followID})
 	if res.Error != nil {
 		return res.Error
 	}
@@ -214,11 +244,11 @@ func notifyFollow(actor, to uint) {
 
 //Update following and follower count
 func (u *User) AfterFind(tx *gorm.DB) (err error) {
-	res := tx.Find(&User_Relations{User_id: u.ID}).Count(&u.NFollowing)
+	res := tx.Find(&UserRelation{UserId: u.ID}).Count(&u.NFollowing)
 	if res.Error != nil {
 		return res.Error
 	}
-	res = tx.Find(&User_Relations{Following_id: u.ID}).Count(&u.NFollowers)
+	res = tx.Find(&UserRelation{FollowingId: u.ID}).Count(&u.NFollowers)
 	if res.Error != nil {
 		return res.Error
 	}
@@ -231,7 +261,7 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 func (um *UserManager) FollowingList(uid uint) ([]User,error) {
 	var userList []User
 	
-	ret := conn.Joins("left join User_Relations on Users.id = User_Relations.Following_id").Where("User_Relations.user_id = ?",uid).Find(&userList)
+	ret := conn.Joins("left join user_relations on Users.id = user_relations.following_id").Where("user_relations.user_id = ?",uid).Find(&userList)
 	if ret.Error != nil {
 		return userList, ret.Error
 	}
@@ -241,7 +271,8 @@ func (um *UserManager) FollowingList(uid uint) ([]User,error) {
 //Get list of people following the user
 func (um *UserManager) FollowerList(uid uint) ([]User,error) {
 	var userList []User
-	ret := conn.Joins("left join User_Relations on Users.id = User_Relations.user_id").Where("User_Relations.Following_id = ?",uid).Find(&userList)
+
+	ret := conn.Joins("left join user_relations on Users.id = user_relations.user_id").Where("user_relations.following_id = ?",uid).Find(&userList)
 	if ret.Error != nil {
 		return userList, ret.Error
 	}
