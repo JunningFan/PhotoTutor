@@ -6,7 +6,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -87,16 +86,17 @@ func checkSuffix(suffix *string) bool {
 func (i *ImgController) mkThumbnail(path string, imgType string) {
 	img, err := getBigImgByName(path, imgType)
 	if err != nil {
+		fmt.Println(err.Error())
 		return
 	}
-	thImg := resize.Thumbnail(512, 512, img, resize.Bilinear)
+	thImg := resize.Thumbnail(256, 256, img, resize.Bilinear)
 	putSmallImgByImg(thImg, path, imgType)
 }
 
 func putSmallImgByImg(img image.Image, imgName string, imgType string) {
 	out, err := os.Create(path.Join(ImgSmallPath, imgName))
 	if err != nil {
-		log.Println(err.Error())
+		fmt.Println(err.Error())
 	}
 	defer out.Close()
 
@@ -107,7 +107,7 @@ func putSmallImgByImg(img image.Image, imgName string, imgType string) {
 		err = png.Encode(out, img)
 	}
 	if err != nil {
-		log.Println(err.Error())
+		fmt.Println(err.Error())
 	}
 }
 
@@ -159,16 +159,25 @@ func (c *ImgController) upload(uid uint, ctx *gin.Context) {
 	}
 	imgName := fmt.Sprintf("%d.%s", imgId, suffix)
 	out, err = os.Create(path.Join(ImgBigPath, imgName))
-	defer out.Close()
+
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("creat fileReader failed %s", err.Error())})
+		conn.Delete(&Img{ID: imgId})
 		return
 	}
 	_, err = io.Copy(out, fileReader)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("io filed %s", err.Error())})
+		conn.Delete(&Img{ID: imgId})
+		return
+	}
+	err = out.Close()
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("io filed %s", err.Error())})
+		conn.Delete(&Img{ID: imgId})
 		return
 	}
 
@@ -186,11 +195,11 @@ func (c *ImgController) getPath(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{
-			"uid":    i.Uid,
+			"uid":    i.UID,
 			"height": height,
 			"width":  width,
-			"big":    fmt.Sprintf("%s%d.%s", ImgBigPath, i.Id, i.Suffix),
-			"small":  fmt.Sprintf("%s%d.%s", ImgSmallPath, i.Id, i.Suffix),
+			"big":    fmt.Sprintf("%s%d.%s", ImgBigPath, i.ID, i.Suffix),
+			"small":  fmt.Sprintf("%s%d.%s", ImgSmallPath, i.ID, i.Suffix),
 		})
 	}
 }
