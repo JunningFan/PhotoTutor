@@ -66,7 +66,7 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 }
 
 /* Redis helper */
-func setUserLoginRedis(uid uint, access, refresh string){
+func setUserLoginRedis(uid uint, access, refresh string) {
 	err := rdb.HSet(redisCtx,
 		fmt.Sprintf("%v", uid),
 		map[string]interface{}{"access": access, "refresh": refresh}).Err()
@@ -75,8 +75,8 @@ func setUserLoginRedis(uid uint, access, refresh string){
 	}
 }
 
-func refrestToken(uid uint, refresh string) (string, error){
-	val, err := rdb.HGet(redisCtx, fmt.Sprintf("%v", uid),"refresh").Result()
+func checkRefreshToken(uid uint, refresh string) (string, error) {
+	val, err := rdb.HGet(redisCtx, fmt.Sprintf("%v", uid), "refresh").Result()
 	if err != nil {
 		return "", err
 	}
@@ -86,10 +86,19 @@ func refrestToken(uid uint, refresh string) (string, error){
 	return getAccessToken(uid)
 }
 
+// updateAccessToken coroutine to update the access token
+func updateAccessToken(uid uint, access string) {
+	err := rdb.HSet(redisCtx,
+		fmt.Sprintf("%v", uid), "access", access).Err()
+	if err != nil {
+		fmt.Printf("redis update access: %v", err.Error())
+	}
+}
+
 func checkAccessToken(uid uint, access string) bool {
-	val, err := rdb.HGet(redisCtx, fmt.Sprintf("%v", uid),"access").Result()
+	val, err := rdb.HGet(redisCtx, fmt.Sprintf("%v", uid), "access").Result()
 	//fmt.Printf("val: %s\nAccess:%s\n", val, access)
-	return  err == nil && val ==  access
+	return err == nil && val == access
 }
 
 // RequrieAuth Passing a handler that User is the first variable
@@ -108,11 +117,10 @@ func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else if !token.Valid {
 			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "expired Token"})
-		} else if claims, ok := token.Claims.(*jwtClaimAccess);
-			!ok || !checkAccessToken(claims.ID, tokenStr) {
+		} else if claims, ok := token.Claims.(*jwtClaimAccess); !ok || !checkAccessToken(claims.ID, tokenStr) {
 			//authorized and pass the context
 			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad Token"})
-		} else  {
+		} else {
 			handler(claims.ID, context)
 		}
 	}
@@ -180,7 +188,6 @@ func getJwtString(user uint) (string, string, error) {
 	}
 }
 
-
 func (uc *UserController) login(ctx *gin.Context) {
 	var input UserLoginInput
 	if err := ctx.ShouldBindJSON(&input); err != nil {
@@ -220,15 +227,14 @@ func (uc *UserController) refresh(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else if !token.Valid {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "expired Token"})
-	} else if claims, ok := token.Claims.(*jwtClaimRefresh); token.Valid && ok {
-		if access, err := refrestToken(claims.ID, input.Refresh); err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		} else {
-			ctx.JSON(http.StatusOK, gin.H{"access": access})
-		}
-	} else {
+	} else if claims, ok := token.Claims.(*jwtClaimRefresh); !ok {
 		//authorized and pass the ctx
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad Token"})
+	} else if access, err := checkRefreshToken(claims.ID, input.Refresh); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	} else {
+		go updateAccessToken(claims.ID, access)
+		ctx.JSON(http.StatusOK, gin.H{"access": access})
 	}
 }
 
@@ -255,12 +261,11 @@ func (uc *UserController) getNicknames(ctx *gin.Context) {
 	}
 }
 
-
 func (uc *UserController) follow(uid uint, ctx *gin.Context) {
 	id := ctx.Param("id")
 	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
-	}else if err := uc.userManager.Follow(uid, uint(idNum)); err != nil {
+	} else if err := uc.userManager.Follow(uid, uint(idNum)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"data": "Followed"})

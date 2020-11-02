@@ -78,6 +78,9 @@ func NewImgController(srvr *gin.RouterGroup) ImgController {
 func checkSuffix(suffix *string) bool {
 	*suffix = strings.ToLower(*suffix)
 	// TODO: more on the types
+	if *suffix == "jpeg" {
+		*suffix = "jpg"
+	}
 	return *suffix == "jpg" || *suffix == "png"
 }
 

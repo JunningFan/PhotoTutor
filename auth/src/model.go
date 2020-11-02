@@ -3,31 +3,32 @@ package src
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/go-redis/redis/v8"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"time"
 )
 
 var (
-	conn *gorm.DB
-	rdb *redis.Client
+	conn     *gorm.DB
+	rdb      *redis.Client
 	redisCtx = context.Background()
 )
 
 type User struct {
-	ID        uint `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
-	Username  string     `gorm:"unique"`
-	Password  string     `json:"-"`
-	Nickname  string
-	Signature string
-	ImgLoc    string `gorm:"-" json:"img"`
+	ID         uint `gorm:"primary_key"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  *time.Time `sql:"index"`
+	Username   string     `gorm:"unique"`
+	Password   string     `json:"-"`
+	Nickname   string
+	Signature  string
+	ImgLoc     string `gorm:"-" json:"img"`
 	NFollowers int64  `gorm:"-"`
 	NFollowing int64  `gorm:"-"`
 }
@@ -61,7 +62,7 @@ type UserUpdateInput struct {
 
 func Setup(DB_DSN, redisSer string) {
 	var err error
-	if redisSer == ""{
+	if redisSer == "" {
 		redisSer = "localhost:6379"
 	}
 
@@ -86,7 +87,7 @@ func Setup(DB_DSN, redisSer string) {
 	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
 
 	//register objects
-	err = conn.AutoMigrate(&User{},&UserRelation{})
+	err = conn.AutoMigrate(&User{}, &UserRelation{})
 
 	if err != nil {
 		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
@@ -123,7 +124,7 @@ func (um *UserManager) Create(input *UserRegisterInput) (User, error) {
 	user := User{
 		Username: input.Username,
 		Nickname: input.Nickname,
-		ImgLoc: "img/small/avatar.png",
+		ImgLoc:   "img/small/avatar.jpg",
 	}
 	if err := user.SetPassword(input.Password); err != nil {
 		return User{}, err
@@ -200,21 +201,20 @@ func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
 }
 
 func checkExist(uid uint) bool {
-	var count int64;
-	res := conn.Find(&User{}, uid).Count(&count )
+	var count int64
+	res := conn.Find(&User{}, uid).Count(&count)
 	if res.Error != nil || count == 0 {
 		return false
 	}
 	return true
 }
 
-
 //Follow Add user to following list
 func (um *UserManager) Follow(uid uint, followID uint) error {
 	if uid == followID {
 		return fmt.Errorf("you cannot follow yourself")
 	}
-	if checkExist(followID) == false{
+	if checkExist(followID) == false {
 		return fmt.Errorf("the user %d does not exist", followID)
 	}
 	res := conn.Create(&UserRelation{UserId: uid, FollowingId: followID})
@@ -255,13 +255,11 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 	return nil
 }
 
-
-
 //Get list of who the user is following
-func (um *UserManager) FollowingList(uid uint) ([]User,error) {
+func (um *UserManager) FollowingList(uid uint) ([]User, error) {
 	var userList []User
-	
-	ret := conn.Joins("left join user_relations on Users.id = user_relations.following_id").Where("user_relations.user_id = ?",uid).Find(&userList)
+
+	ret := conn.Joins("left join user_relations on Users.id = user_relations.following_id").Where("user_relations.user_id = ?", uid).Find(&userList)
 	if ret.Error != nil {
 		return userList, ret.Error
 	}
@@ -269,13 +267,12 @@ func (um *UserManager) FollowingList(uid uint) ([]User,error) {
 }
 
 //Get list of people following the user
-func (um *UserManager) FollowerList(uid uint) ([]User,error) {
+func (um *UserManager) FollowerList(uid uint) ([]User, error) {
 	var userList []User
 
-	ret := conn.Joins("left join user_relations on Users.id = user_relations.user_id").Where("user_relations.following_id = ?",uid).Find(&userList)
+	ret := conn.Joins("left join user_relations on Users.id = user_relations.user_id").Where("user_relations.following_id = ?", uid).Find(&userList)
 	if ret.Error != nil {
 		return userList, ret.Error
 	}
 	return userList, nil
 }
-
