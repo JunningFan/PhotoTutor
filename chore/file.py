@@ -7,15 +7,15 @@ BASE_URL = "http://localhost:8000/"
 response = requests.post(
     BASE_URL + "user/login/",
     json={
-        "username": "ttt1",
-        "password": "apple123"
+        "username": "test",
+        "password": "test"
     }
 )
 
 access = response.json()['access']
 
 encoder = MultipartEncoder(fields={
-    'upload': ('upload.png', open('/home/tecty/Pictures/upload.png', 'rb'))
+    'upload': ('upload.jpeg', open('./avatar.jpeg', 'rb'))
 })
 
 response = requests.post(

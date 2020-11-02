@@ -1,12 +1,12 @@
 package src
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"log"
-	"bytes"
+	"net/http"
 )
 
 // ImgInfo of the image
@@ -30,23 +30,18 @@ type ErrorResp struct {
 }
 
 var imgSer string
-var notifSer string
+var notifySer string
 
 //NewClient for remote img server
-func NewClient(server string) {
-	if server == "" {
-		imgSer = "http://localhost:8083/"
-	} else {
-		imgSer = server
+func NewClient(img  , notify string ) {
+	if img == "" {
+		img = "http://localhost:8083/"
 	}
-}
-
-func NotifServ(server string) {
-	if server == "" {
-		notifSer = "http://localhost:8084/"
-	} else {
-		notifSer = server
+	if notify == "" {
+		notify = "http://localhost:8084/"
 	}
+	imgSer = img
+	notifySer = notify
 }
 
 
@@ -89,10 +84,10 @@ func GetImgInfo(id, uid uint) (ImgInfo, error) {
 // CreateNotification post a notification to remote
 func CreateNotification(v interface{}) {
 	
-	fmt.Println(notifSer)
+	fmt.Println(notifySer)
 	if jbytes, err := json.Marshal(v); err != nil {
 		log.Printf("Notification Marshal Err: %s\n", err.Error())
-	} else if resp, err := http.Post(notifSer, "application/json", bytes.NewReader(jbytes)); err != nil {
+	} else if resp, err := http.Post(notifySer, "application/json", bytes.NewReader(jbytes)); err != nil {
 		log.Printf("Notification Sync Err: %s\n", err.Error())
 	} else if err := resp.Body.Close(); err != nil {
 		log.Printf("Notification Close Fp Err: %s\n", err.Error())

@@ -56,12 +56,49 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 	srvr.POST("login/", res.login)
 	srvr.POST("refresh/", res.refresh)
 	srvr.POST("nicknames/", res.getNicknames)
-	srvr.POST("follow/", RequrieAuth(res.addFollower))
-	srvr.POST("unfollow/", RequrieAuth(res.unfollow))
-	srvr.GET(":id", res.getOne)
+	srvr.GET("detail/:id", res.getOne)
 	srvr.GET("", RequrieAuth(res.getCurrUser))
-
+	srvr.POST("follow/:id", RequrieAuth(res.follow))
+	srvr.DELETE("follow/:id", RequrieAuth(res.unfollow))
+	srvr.GET("follow/ing/:id", res.getFollowing)
+	srvr.GET("follow/ers/:id", res.getFollowers)
 	return res
+}
+
+/* Redis helper */
+func setUserLoginRedis(uid uint, access, refresh string) {
+	err := rdb.HSet(redisCtx,
+		fmt.Sprintf("%v", uid),
+		map[string]interface{}{"access": access, "refresh": refresh}).Err()
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
+}
+
+func checkRefreshToken(uid uint, refresh string) (string, error) {
+	val, err := rdb.HGet(redisCtx, fmt.Sprintf("%v", uid), "refresh").Result()
+	if err != nil {
+		return "", err
+	}
+	if val != refresh {
+		return "", fmt.Errorf("invalid refresh token")
+	}
+	return getAccessToken(uid)
+}
+
+// updateAccessToken coroutine to update the access token
+func updateAccessToken(uid uint, access string) {
+	err := rdb.HSet(redisCtx,
+		fmt.Sprintf("%v", uid), "access", access).Err()
+	if err != nil {
+		fmt.Printf("redis update access: %v", err.Error())
+	}
+}
+
+func checkAccessToken(uid uint, access string) bool {
+	val, err := rdb.HGet(redisCtx, fmt.Sprintf("%v", uid), "access").Result()
+	//fmt.Printf("val: %s\nAccess:%s\n", val, access)
+	return err == nil && val == access
 }
 
 // RequrieAuth Passing a handler that User is the first variable
@@ -80,11 +117,11 @@ func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else if !token.Valid {
 			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "expired Token"})
-		} else if claims, ok := token.Claims.(*jwtClaimAccess); token.Valid && ok {
-			handler(claims.ID, context)
-		} else {
+		} else if claims, ok := token.Claims.(*jwtClaimAccess); !ok || !checkAccessToken(claims.ID, tokenStr) {
 			//authorized and pass the context
 			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad Token"})
+		} else {
+			handler(claims.ID, context)
 		}
 	}
 }
@@ -111,6 +148,7 @@ func (uc *UserController) register(ctx *gin.Context) {
 	} else if accessToken, refreshToken, err := getJwtString(user.ID); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
+		go setUserLoginRedis(user.ID, accessToken, refreshToken)
 		ctx.JSON(http.StatusOK, gin.H{"user": user, "access": accessToken, "refresh": refreshToken})
 	}
 }
@@ -166,6 +204,7 @@ func (uc *UserController) login(ctx *gin.Context) {
 	if accessToken, refreshToken, err := getJwtString(user.ID); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	} else {
+		go setUserLoginRedis(user.ID, accessToken, refreshToken)
 		ctx.JSON(http.StatusOK, gin.H{"user": user, "access": accessToken, "refresh": refreshToken})
 	}
 }
@@ -188,15 +227,14 @@ func (uc *UserController) refresh(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else if !token.Valid {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "expired Token"})
-	} else if claims, ok := token.Claims.(*jwtClaimRefresh); token.Valid && ok {
-		if access, err := getAccessToken(claims.ID); err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		} else {
-			ctx.JSON(http.StatusOK, gin.H{"access": access})
-		}
-	} else {
+	} else if claims, ok := token.Claims.(*jwtClaimRefresh); !ok {
 		//authorized and pass the ctx
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad Token"})
+	} else if access, err := checkRefreshToken(claims.ID, input.Refresh); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	} else {
+		go updateAccessToken(claims.ID, access)
+		ctx.JSON(http.StatusOK, gin.H{"access": access})
 	}
 }
 
@@ -223,28 +261,46 @@ func (uc *UserController) getNicknames(ctx *gin.Context) {
 	}
 }
 
-
-func (uc *UserController) addFollower(uid uint, ctx *gin.Context) {
-	var input UserFollowerInput
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	} else if user, err := uc.userManager.AddFollower(uid, input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+func (uc *UserController) follow(uid uint, ctx *gin.Context) {
+	id := ctx.Param("id")
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
+	} else if err := uc.userManager.Follow(uid, uint(idNum)); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		ctx.JSON(http.StatusOK, gin.H{"data": "Followed"})
 	}
 }
 
 func (uc *UserController) unfollow(uid uint, ctx *gin.Context) {
-	var input UserFollowerInput
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	} else if user, err := uc.userManager.Unfollow(uid, input); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	id := ctx.Param("id")
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
+	} else if err := uc.userManager.Unfollow(uid, uint(idNum)); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		ctx.JSON(http.StatusOK, gin.H{"data": "Unfollowed"})
 	}
 }
 
+func (uc *UserController) getFollowing(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
+	} else if users, err := uc.userManager.FollowingList(uint(idNum)); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, users)
+	}
+}
+
+func (uc *UserController) getFollowers(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
+	} else if users, err := uc.userManager.FollowerList(uint(idNum)); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, users)
+	}
+}

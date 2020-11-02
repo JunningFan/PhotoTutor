@@ -1,10 +1,10 @@
 # @baseUrl =http://whiteboard.house:8000/user/
 # @baseUrl =http://localhost:8000/user/
 @baseUrl =http://localhost:8080/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMTczMTl9._tkSIxedgciM7EKMuscMfhp46h5cs2uB7TcpATQS9lbEORz00IutwPpReDcFh6ZAxzjhJ0xNKyTq_EnNQB0lXQ
-@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5NjY1NDEzfQ.bv6Ng1yPOkE-8hkv75z6-kEPdn5ljmUuWmdB4ynBpVIQJiW9wHaPCwcirqgajFH-gwntQsS8JqMoFdt18eEX1A
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ0MTEzNzN9.EhSIO6etnZGoEwyyOkyNKH95e6QztUCh1oKIHnvRKcUhbDhiWIrr24k93yXMenbqqPc3-BYLDkhbaYpTnERXpA
+@refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5ODc2Nzg5fQ.vRngQ6PnIIvgVOaJNI-1e9tZAHeBxgwmWVucOjcCyx9rOtyRHwNHtLFP4roYdR5QIrG63czF0JCU8kTrsxmYtg
 ### Get user detail 
-GET {{baseUrl}}2
+GET {{baseUrl}}detail/2
 Accept: application/json
 
 ### Reigster
@@ -60,20 +60,20 @@ POST {{baseUrl}}nicknames/
 }
 
 ### Add Follower
-POST {{baseUrl}}follow/
+POST {{baseUrl}}follow/2
 Accept: application/json
 Authorization: {{token}}
-
-{
-    "Following":1
-}
-
 
 ### Remove Follower
-POST {{baseUrl}}unfollow/
+DELETE {{baseUrl}}follow/7
 Accept: application/json
 Authorization: {{token}}
 
-{
-    "Following":1
-}
+### Who is following the user
+GET {{baseUrl}}follow/ers/1
+Accept: application/json
+
+
+### Who is the user following
+GET {{baseUrl}}follow/ing/1
+Accept: application/json

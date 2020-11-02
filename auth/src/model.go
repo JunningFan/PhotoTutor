@@ -1,52 +1,41 @@
 package src
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
-	conn *gorm.DB
+	conn     *gorm.DB
+	rdb      *redis.Client
+	redisCtx = context.Background()
 )
 
-func Setup(DB_DSN string) {
-	var err error
-	if DB_DSN == "" {
-		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	} else {
-		fmt.Println(DB_DSN)
-		//	only support postgres connection
-		conn, err = gorm.Open(postgres.Open(DB_DSN), &gorm.Config{})
-	}
-	if err != nil {
-		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
-	}
-	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
-
-	//register objects
-	err = conn.AutoMigrate(&User{})
-	if err != nil {
-		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
-	}
-	//println("Finish set up databse conn dsn ", DB_DSN)
+type User struct {
+	ID         uint `gorm:"primary_key"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  *time.Time `sql:"index"`
+	Username   string     `gorm:"unique"`
+	Password   string     `json:"-"`
+	Nickname   string
+	Signature  string
+	ImgLoc     string `gorm:"-" json:"img"`
+	NFollowers int64  `gorm:"-"`
+	NFollowing int64  `gorm:"-"`
 }
 
-type User struct {
-	ID        uint `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
-	Username  string     `gorm:"unique"`
-	Password  string     `json:"-"`
-	Nickname  string
-	Signature string
-	ImgLoc    string `gorm:"-" json:"img"`
-	Following []*User  `gorm:"many2many:user_relation;foreignKey:ID;joinForeignKey:user_id;References:ID;joinReferences:follower_id"`
-	Followers []*User `gorm:"many2many:user_relation;foreignKey:ID;joinForeignKey:follower_id;References:ID;joinReferences:user_id"`
+type UserRelation struct {
+	UserId      uint `gorm:"primary_key"`
+	FollowingId uint `gorm:"primary_key"`
 }
 
 type UserRegisterInput struct {
@@ -71,8 +60,39 @@ type UserUpdateInput struct {
 	Img       uint   `binding:"required"`
 }
 
-type UserFollowerInput struct {
-	Following uint `binding:"required"`
+func Setup(DB_DSN, redisSer string) {
+	var err error
+	if redisSer == "" {
+		redisSer = "localhost:6379"
+	}
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     redisSer,
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	if DB_DSN == "" {
+		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
+	} else {
+		fmt.Println(DB_DSN)
+		//	only support postgres connection
+		conn, err = gorm.Open(postgres.Open(DB_DSN), &gorm.Config{})
+	}
+	if err != nil {
+		panic(fmt.Sprintf("Fail to connect to database %v", err.Error()))
+	}
+	//conn = conn.LogMode(true).Set("gorm:auto_preload", true)
+
+	//register objects
+	err = conn.AutoMigrate(&User{}, &UserRelation{})
+
+	if err != nil {
+		panic(fmt.Sprintf("Fail to migrate database %v", err.Error()))
+	}
+	//println("Finish set up databse conn dsn ", DB_DSN)
 }
 
 type UserManager struct{}
@@ -99,9 +119,13 @@ func (u *User) CheckPassword(password string) error {
 	return nil
 }
 
-// Create Create user with given user input
+// Create user with given user input
 func (um *UserManager) Create(input *UserRegisterInput) (User, error) {
-	user := User{Username: input.Username, Nickname: input.Nickname}
+	user := User{
+		Username: input.Username,
+		Nickname: input.Nickname,
+		ImgLoc:   "img/small/avatar.jpg",
+	}
 	if err := user.SetPassword(input.Password); err != nil {
 		return User{}, err
 	}
@@ -122,8 +146,8 @@ func (um *UserManager) Login(input *UserLoginInput) (User, error) {
 	if err := user.CheckPassword(input.Password); err != nil {
 		return User{}, err
 	}
-	user.Following = FollowingList(user.ID)
-	user.Followers = FollowerList(user.ID)
+	//user.Following = FollowingList(user.ID)
+	//user.Followers = FollowerList(user.ID)
 	return user, nil
 }
 
@@ -136,8 +160,8 @@ func (um *UserManager) GetUser(uid uint) (User, error) {
 func GetUserByID(uid uint) (User, error) {
 	var ret User
 	res := conn.First(&ret, uid)
-	ret.Following = FollowingList(uid)
-	ret.Followers = FollowerList(uid)
+	//ret.Following = FollowingList(uid)
+	//ret.Followers = FollowerList(uid)
 	return ret, res.Error
 }
 
@@ -176,25 +200,38 @@ func (um *UserManager) ResolveNicknameByIds(ids []uint) ([]NicknameMap, error) {
 	return ret, res.Error
 }
 
-//Add user to following list
-func (um *UserManager) AddFollower(uid uint, input UserFollowerInput) (User,error) {
-	user := User{}
-	followID,err := GetUserByID(input.Following)
+func checkExist(uid uint) bool {
+	var count int64
+	res := conn.Find(&User{}, uid).Count(&count)
+	if res.Error != nil || count == 0 {
+		return false
+	}
+	return true
+}
 
-	if err != nil{
-		return User{}, err
+//Follow Add user to following list
+func (um *UserManager) Follow(uid uint, followID uint) error {
+	if uid == followID {
+		return fmt.Errorf("you cannot follow yourself")
 	}
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return User{}, res.Error
-	} else if  res := conn.Find(&followID, followID.ID); res.Error != nil {
-		return User{}, res.Error
-	} else if  uid == followID.ID {
-		return User{}, fmt.Errorf("Cannot follow self")
-	} else {
-		conn.Model(&user).Association("Following").Append(&followID)
-		go notifyFollow(uid, followID.ID)
-		return user, nil
+	if checkExist(followID) == false {
+		return fmt.Errorf("the user %d does not exist", followID)
 	}
+	res := conn.Create(&UserRelation{UserId: uid, FollowingId: followID})
+	if res.Error != nil {
+		return res.Error
+	}
+	go notifyFollow(uid, followID)
+	return nil
+}
+
+//Unfollow Remove user from following list
+func (um *UserManager) Unfollow(uid uint, followID uint) error {
+	res := conn.Delete(&UserRelation{UserId: uid, FollowingId: followID})
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
 }
 
 func notifyFollow(actor, to uint) {
@@ -205,46 +242,37 @@ func notifyFollow(actor, to uint) {
 	})
 }
 
-//Remove user from following list
-func (um *UserManager) Unfollow(uid uint, input UserFollowerInput) (User,error) {
-	user := User{}
-	followUser := User{}
-	followID,err := GetUserByID(input.Following)
-
-	if err != nil{
-		return User{}, err
+//Update following and follower count
+func (u *User) AfterFind(tx *gorm.DB) (err error) {
+	res := tx.Find(&UserRelation{UserId: u.ID}).Count(&u.NFollowing)
+	if res.Error != nil {
+		return res.Error
 	}
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return User{}, res.Error
-	} else if  res := conn.Find(&followUser, followID); res.Error != nil {
-		return User{}, res.Error
-	} else {
-		conn.Model(&user).Association("Following").Delete(&followUser)
-		return user, nil
+	res = tx.Find(&UserRelation{FollowingId: u.ID}).Count(&u.NFollowers)
+	if res.Error != nil {
+		return res.Error
 	}
+	return nil
 }
 
-//Get who the user is following 
-func FollowingList(uid uint) ([]*User) {
-	user := User{}
-	var userList []*User
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return userList
-	} else {
-		conn.Model(&user).Association("Following").Find(&userList)
-		return userList
+//Get list of who the user is following
+func (um *UserManager) FollowingList(uid uint) ([]User, error) {
+	var userList []User
+
+	ret := conn.Joins("left join user_relations on Users.id = user_relations.following_id").Where("user_relations.user_id = ?", uid).Find(&userList)
+	if ret.Error != nil {
+		return userList, ret.Error
 	}
+	return userList, nil
 }
 
-//Get who is following the user
-func FollowerList(uid uint) ([]*User) {
-	user := User{}
-	var userList []*User
-	if res := conn.Find(&user, uid); res.Error != nil {
-		return userList
-	} else {
-		conn.Model(&user).Association("Followers").Find(&userList)
-		return userList
-	}
-}
+//Get list of people following the user
+func (um *UserManager) FollowerList(uid uint) ([]User, error) {
+	var userList []User
 
+	ret := conn.Joins("left join user_relations on Users.id = user_relations.user_id").Where("user_relations.following_id = ?", uid).Find(&userList)
+	if ret.Error != nil {
+		return userList, ret.Error
+	}
+	return userList, nil
+}
