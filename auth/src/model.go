@@ -28,7 +28,7 @@ type User struct {
 	Password   string     `json:"-"`
 	Nickname   string
 	Signature  string
-	ImgLoc     string `gorm:"-" json:"img"`
+	ImgLoc     string `json:"img"`
 	NFollowers int64  `gorm:"-"`
 	NFollowing int64  `gorm:"-"`
 }
