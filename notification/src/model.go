@@ -12,6 +12,7 @@ import (
 type Notification struct {
 	ID      uint `gorm:"primaryKey"`
 	UID     uint
+	Actor   uint
 	Type    string
 	Message string
 }
@@ -61,4 +62,3 @@ func RemoveMsgList(uid, lastID uint) error {
 	res := conn.Where("id <= ? AND uid = ?", lastID, uid).Delete(Notification{})
 	return res.Error
 }
-
