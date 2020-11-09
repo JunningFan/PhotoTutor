@@ -60,6 +60,8 @@ func NewUserController(srvr *gin.RouterGroup) UserController {
 	srvr.GET("", RequrieAuth(res.getCurrUser))
 	srvr.POST("follow/:id", RequrieAuth(res.follow))
 	srvr.DELETE("follow/:id", RequrieAuth(res.unfollow))
+	srvr.GET("follow/", RequrieAuth(res.getMyFollowing))
+	srvr.GET("follow/ami/:id", RequrieAuth(res.amIFollowing))
 	srvr.GET("follow/ing/:id", res.getFollowing)
 	srvr.GET("follow/ers/:id", res.getFollowers)
 	return res
@@ -287,10 +289,8 @@ func (uc *UserController) getFollowing(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
-	} else if users, err := uc.userManager.FollowingList(uint(idNum)); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, users)
+		uc.getMyFollowing(uint(idNum), ctx)
 	}
 }
 
@@ -301,6 +301,23 @@ func (uc *UserController) getFollowers(ctx *gin.Context) {
 	} else if users, err := uc.userManager.FollowerList(uint(idNum)); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, users)
+		ctx.JSON(http.StatusOK, gin.H{"data": users})
+	}
+}
+
+func (uc *UserController) getMyFollowing(uid uint, ctx *gin.Context) {
+	if users, err := uc.userManager.FollowingList(uid); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"data": users})
+	}
+}
+
+func (uc *UserController) amIFollowing(uid uint, ctx *gin.Context) {
+	id := ctx.Param("id")
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "the id of user must be string"})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"data": uc.userManager.IsFolloing(uid, uint(idNum))})
 	}
 }
