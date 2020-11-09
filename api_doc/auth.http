@@ -1,7 +1,7 @@
-# @baseUrl =http://whiteboard.house:8000/user/
+@baseUrl =http://whiteboard.house:8000/user/
 # @baseUrl =http://localhost:8000/user/
-@baseUrl =http://localhost:8080/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ0MTEzNzN9.EhSIO6etnZGoEwyyOkyNKH95e6QztUCh1oKIHnvRKcUhbDhiWIrr24k93yXMenbqqPc3-BYLDkhbaYpTnERXpA
+# @baseUrl =http://localhost:8080/
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ3NTgyNDV9.yFAlL3rIpPjnMlTibukE6Qe1_X6aJfsr-UnReuoNnAhw7Jy1LYgFLchQAJCwRH_EUAgo_hxjJrTvnFBXmgIFxQ
 @refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5ODc2Nzg5fQ.vRngQ6PnIIvgVOaJNI-1e9tZAHeBxgwmWVucOjcCyx9rOtyRHwNHtLFP4roYdR5QIrG63czF0JCU8kTrsxmYtg
 ### Get user detail 
 GET {{baseUrl}}detail/2
@@ -41,7 +41,17 @@ Authorization: {{token}}
 {
 	"Nickname": "Tecty",
     "Signature": "I am a good photographer, contact me with wechat: myTecty",
-    "Img": 1
+    "Img": 2
+}
+
+### Update while not changing the avatar
+PUT {{baseUrl}}
+Accept: application/json
+Authorization: {{token}}
+
+{
+	"Nickname": "Tecty",
+    "Signature": "I am a good photographer, contact me with wechat: myTecty"
 }
 
 ### Refresh Token 

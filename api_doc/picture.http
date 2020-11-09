@@ -1,7 +1,7 @@
-@baseUrl=http://localhost:8081/
+# @baseUrl=http://localhost:8081/
 # @baseUrl=http://localhost:8000/picture/
-# @baseUrl=http://whiteboard.house:8000/picture/
-@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQyMjQyOTF9.nUscEurD8K7yGbD9lXtm1Aaoa_b3sSqpIDk3M968haC3MUn17MkUtYYF-LNsZ5dwAXwQ2OcYZ_AhUBTb8elTOw
+@baseUrl=http://whiteboard.house:8000/picture/
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ5ODc2NzB9.fgNEEF1gUB-7zFIXE_0lNnUebkQ3DCgtjCtTG-YckXk8taV0dWL8_QxG_dHAi0L4B0SBL0MposRrDZbMioM9oQ
 
 ### Hello World
 GET {{baseUrl}}
@@ -22,7 +22,8 @@ Authorization: {{auth}}
 
 {
 	"title": "helloworld",
-    "Img": 2,
+	"body":"This is a hello world post",
+    "Img": 8,
     "lat": 3.44,
     "lng": 1.22,
     "location" : {

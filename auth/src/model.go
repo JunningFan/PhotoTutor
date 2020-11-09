@@ -28,7 +28,7 @@ type User struct {
 	Password   string     `json:"-"`
 	Nickname   string
 	Signature  string
-	ImgLoc     string `gorm:"-" json:"img"`
+	ImgLoc     string `json:"img"`
 	NFollowers int64  `gorm:"-"`
 	NFollowing int64  `gorm:"-"`
 }
@@ -57,7 +57,7 @@ type UserChangePasswordInput struct {
 type UserUpdateInput struct {
 	Nickname  string `binding:"required"`
 	Signature string `binding:"required"`
-	Img       uint   `binding:"required"`
+	Img       uint
 }
 
 func Setup(DB_DSN, redisSer string) {
@@ -168,21 +168,27 @@ func GetUserByID(uid uint) (User, error) {
 // Update User information
 func (um *UserManager) Update(uid uint, input UserUpdateInput) (User, error) {
 	user := User{}
-	if img, err := GetImgInfo(input.Img, uid); err != nil {
-		return User{}, err
-	} else if res := conn.Find(&user, uid); res.Error != nil {
+	res := conn.Find(&user, uid)
+	if res.Error != nil {
+		return User{}, res.Error
+	}
+
+	if input.Img != 0 {
+		// if img is 0, keep the original image
+		img, err := GetImgInfo(input.Img, uid)
+		if err != nil {
+			return User{}, err
+		}
+		user.ImgLoc = img.Small
+	}
+	// update teh fileds by the input
+	user.Nickname = input.Nickname
+	user.Signature = input.Signature
+
+	if res := conn.Save(&user); res.Error != nil {
 		return User{}, res.Error
 	} else {
-		user.Nickname = input.Nickname
-		user.Signature = input.Signature
-		user.ImgLoc = img.Small
-		// user.ImgLoc = path.Join(util.ImgSmallPath, imgPath)
-
-		if res := conn.Save(&user); res.Error != nil {
-			return User{}, res.Error
-		} else {
-			return user, nil
-		}
+		return user, nil
 	}
 }
 

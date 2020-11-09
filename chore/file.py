@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 import requests
 from requests_toolbelt.multipart.encoder import MultipartEncoder
-BASE_URL = "http://localhost:8000/"
-# BASE_URL = "http://whiteboard.house:8000/"
+# BASE_URL = "http://localhost:8000/"
+BASE_URL = "http://whiteboard.house:8000/"
 
 response = requests.post(
     BASE_URL + "user/login/",
@@ -15,7 +15,7 @@ response = requests.post(
 access = response.json()['access']
 
 encoder = MultipartEncoder(fields={
-    'upload': ('upload.jpeg', open('./avatar.jpeg', 'rb'))
+    'upload': ('upload.jpeg', open('/home/tecty/Pictures/upload.png', 'rb'))
 })
 
 response = requests.post(

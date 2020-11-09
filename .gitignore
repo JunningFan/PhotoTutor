@@ -1,6 +1,6 @@
 db/
 img/
-
+els_data/
 auth/auth.exe
 notification/notification.exe
 web/main.exe
