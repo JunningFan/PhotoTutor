@@ -68,6 +68,7 @@ type Picture struct {
 
 type PictureInput struct {
 	Title string `binding:"required"`
+	Body  string
 	Uid   uint
 	// `json:"-"` // inject after login
 	// User         User
@@ -128,6 +129,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 
 	pic := Picture{
 		Title:    input.Title,
+		Body:     input.Body,
 		UserID:   input.Uid,
 		NView:    0,
 		ImgSmall: imgInfo.Small,

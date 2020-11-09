@@ -1,5 +1,5 @@
-# @baseUrl =http://whiteboard.house:8000/user/
-@baseUrl =http://localhost:8000/user/
+@baseUrl =http://whiteboard.house:8000/user/
+# @baseUrl =http://localhost:8000/user/
 # @baseUrl =http://localhost:8080/
 @token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ3NTgyNDV9.yFAlL3rIpPjnMlTibukE6Qe1_X6aJfsr-UnReuoNnAhw7Jy1LYgFLchQAJCwRH_EUAgo_hxjJrTvnFBXmgIFxQ
 @refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5ODc2Nzg5fQ.vRngQ6PnIIvgVOaJNI-1e9tZAHeBxgwmWVucOjcCyx9rOtyRHwNHtLFP4roYdR5QIrG63czF0JCU8kTrsxmYtg
