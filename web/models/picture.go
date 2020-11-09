@@ -29,6 +29,7 @@ type Vote struct {
 type Picture struct {
 	gorm.Model
 	Title  string
+	Body   string
 	UserID uint
 	NView  uint // how many views
 
