@@ -282,3 +282,10 @@ func (um *UserManager) FollowerList(uid uint) ([]User, error) {
 	}
 	return userList, nil
 }
+
+// IsFolloing check whether the following relationship exist
+func (um *UserManager) IsFolloing(from, to uint) bool {
+	var c int64
+	conn.Find(&UserRelation{UserId: from, FollowingId: to}).Count(&c)
+	return c == 1
+}

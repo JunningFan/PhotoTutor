@@ -1,7 +1,7 @@
-@baseUrl =http://whiteboard.house:8000/user/
+# @baseUrl =http://whiteboard.house:8000/user/
 # @baseUrl =http://localhost:8000/user/
-# @baseUrl =http://localhost:8080/
-@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ3NTgyNDV9.yFAlL3rIpPjnMlTibukE6Qe1_X6aJfsr-UnReuoNnAhw7Jy1LYgFLchQAJCwRH_EUAgo_hxjJrTvnFBXmgIFxQ
+@baseUrl =http://localhost:8080/
+@token = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDUwMjg5NzR9.90PKQ3BbbMXLjou8VdyOoZ7CdYLZja6y4CR3SDkBzi5gcTGsAtKUyjnadHy0beo_sL-7fa63zzTE9r68iayN0Q
 @refresh = eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjpmYWxzZSwiRXhwaXJlIjoxNjE5ODc2Nzg5fQ.vRngQ6PnIIvgVOaJNI-1e9tZAHeBxgwmWVucOjcCyx9rOtyRHwNHtLFP4roYdR5QIrG63czF0JCU8kTrsxmYtg
 ### Get user detail 
 GET {{baseUrl}}detail/2
@@ -12,7 +12,7 @@ POST {{baseUrl}}
 Accept: application/json
 
 {
-	"username": "test",
+	"username": "test1",
     "password": "test",
     "nickname": "test"
 }
@@ -23,7 +23,7 @@ POST {{baseUrl}}login/
 Accept: application/json
 
 {
-	"username": "test",
+	"username": "test1",
     "password": "test"
 }
 
@@ -70,12 +70,12 @@ POST {{baseUrl}}nicknames/
 }
 
 ### Add Follower
-POST {{baseUrl}}follow/2
+POST {{baseUrl}}follow/1
 Accept: application/json
 Authorization: {{token}}
 
 ### Remove Follower
-DELETE {{baseUrl}}follow/7
+DELETE {{baseUrl}}follow/1
 Accept: application/json
 Authorization: {{token}}
 
@@ -87,3 +87,13 @@ Accept: application/json
 ### Who is the user following
 GET {{baseUrl}}follow/ing/1
 Accept: application/json
+
+### Get is my following 
+GET {{baseUrl}}follow/
+Accept: application/json
+Authorization: {{token}}
+
+### Check whether ami following 
+GET {{baseUrl}}follow/ami/1
+Accept: application/json
+Authorization: {{token}}
