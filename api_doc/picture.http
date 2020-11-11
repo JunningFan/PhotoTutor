@@ -1,7 +1,7 @@
 # @baseUrl=http://localhost:8081/
 # @baseUrl=http://localhost:8000/picture/
 @baseUrl=http://whiteboard.house:8000/picture/
-@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQ5ODc2NzB9.fgNEEF1gUB-7zFIXE_0lNnUebkQ3DCgtjCtTG-YckXk8taV0dWL8_QxG_dHAi0L4B0SBL0MposRrDZbMioM9oQ
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6NDYsIkFjY2VzcyI6dHJ1ZSwiRXhwaXJlIjoxNjA1MTYxNTMyfQ.U6xURgXYTMvakfqmXyrvw5LEht9yEBVrkbxexS4EAr9Jws9SMLi6qzWI_GKqRKT25BJFE7isl7kHdue6oHQg1Q
 
 ### Hello World
 GET {{baseUrl}}
