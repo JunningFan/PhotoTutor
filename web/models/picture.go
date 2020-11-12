@@ -59,7 +59,7 @@ type Picture struct {
 	// for calculated filed
 	NLike    int64  `gorm:"-"`
 	NDislike int64  `gorm:"-"`
-	Votes    []Vote `json:"-"`
+	Votes    []Vote ``
 
 	Tags []Tag `gorm:"many2many:picture_tag;"`
 	// has many tags
@@ -93,7 +93,9 @@ func (p *Picture) AfterFind(tx *gorm.DB) (err error) {
 	if res.Error != nil {
 		return res.Error
 	}
-	res = tx.Find(&Vote{PictureID: p.ID, Like: false}).Count(&p.NDislike)
+	// Don't know why the generated querry is not working .
+	res = tx.Find(&Vote{PictureID: p.ID}).Count(&p.NDislike)
+	p.NDislike -= p.NLike
 	if res.Error != nil {
 		return res.Error
 	}
@@ -108,7 +110,7 @@ func NewPictureManager() PictureManager {
 
 func (p *PictureManager) All() ([]Picture, error) {
 	var pictures []Picture
-	res := conn.Joins("Location").Preload("Tags").Find(&pictures)
+	res := conn.Joins("Location").Preload("Votes").Preload("Tags").Find(&pictures)
 	// print(conn.Association("Tag"))
 	return pictures, res.Error
 }
@@ -161,7 +163,7 @@ func (p *PictureManager) Insert(input *PictureInput) (Picture, error) {
 // One Find the one picture
 func (p *PictureManager) One(pid uint) (Picture, error) {
 	var picture Picture
-	res := conn.Joins("Location").Preload("Tags").First(&picture, pid)
+	res := conn.Joins("Location").Preload("Votes").Preload("Tags").First(&picture, pid)
 	go incPicNView(picture)
 	return picture, res.Error
 }
@@ -254,6 +256,8 @@ func (p *PictureManager) syncElsVote(pid uint) {
 	if err != nil {
 		fmt.Println("Sync Els Vote Error: ", err)
 	}
+	// prevent the data in els goes exponentially
+	pic.Votes = nil
 	syncElsPicture(pic)
 }
 

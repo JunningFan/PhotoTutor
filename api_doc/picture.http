@@ -50,6 +50,7 @@ Authorization: {{auth}}
 {
     "message":"I really like this photo!"
 }
+
 ### Delete Commnet, This id is not the picture id, is comment id 
 DELETE  {{baseUrl}}1/comment
 Accept: application/json
@@ -67,7 +68,7 @@ Authorization: {{auth}}
 
 
 ### Dislike
-POST {{baseUrl}}1/dislike
+POST {{baseUrl}}3/dislike
 Accept: application/json
 Authorization: {{auth}}
 
