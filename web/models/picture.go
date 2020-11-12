@@ -93,7 +93,7 @@ func (p *Picture) AfterFind(tx *gorm.DB) (err error) {
 	if res.Error != nil {
 		return res.Error
 	}
-	res = tx.Find(&Vote{PictureID: p.ID}).Where("like", false).Count(&p.NDislike)
+	res = tx.Find(&Vote{PictureID: p.ID, Like: false}).Count(&p.NDislike)
 	if res.Error != nil {
 		return res.Error
 	}
@@ -202,6 +202,23 @@ func (p *PictureManager) Comment(pid uint, comment Comment) (Comment, error) {
 	return comment, nil
 }
 
+// DelComment delete the comment specified
+func (p *PictureManager) DelComment(uid, pid uint) error {
+	var comm Comment
+	res := conn.Find(&Comment{}).First(&comm, pid)
+	if res.Error != nil {
+		return res.Error
+	}
+	if comm.UID != uid {
+		return fmt.Errorf("not your comment")
+	}
+
+	// delete the comment, we don't care the
+	go conn.Delete(&comm)
+	go delElsComment(pid)
+	return nil
+}
+
 // Like a picture post
 func (p *PictureManager) Like(uid, pid uint) error {
 	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: true})
@@ -217,6 +234,17 @@ func (p *PictureManager) Dislike(uid, pid uint) error {
 	if res.Error != nil {
 		go p.syncElsVote(pid)
 	}
+	return res.Error
+}
+
+// RemoveLike remove hte linking of  like and dislike
+func (p *PictureManager) RemoveLike(uid, pid uint) error {
+	var vote Vote
+	res := conn.Find(&Vote{PictureID: pid, UID: uid}).First(&vote)
+	if res.Error != nil {
+		return res.Error
+	}
+	res = conn.Delete(&vote)
 	return res.Error
 }
 
@@ -243,6 +271,10 @@ func delElsPicture(pid uint) {
 
 func syncElsPicture(p Picture) {
 	client.PutElsObj(fmt.Sprintf("picture/_doc/%d", p.ID), p)
+}
+
+func delElsComment(cid uint) {
+	client.DelElsObj(fmt.Sprintf("comment/_doc/%d", cid))
 }
 
 func syncElsComment(c Comment) {

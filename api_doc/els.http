@@ -88,7 +88,7 @@ Content-Type: application/json
   "size": 10,
   "query":{
       "match": {
-          "PictureID": 1
+          "PictureID": 64
       }
   }
 }

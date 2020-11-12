@@ -1,11 +1,7 @@
-# @baseUrl=http://localhost:8081/
+@baseUrl=http://localhost:8081/
 # @baseUrl=http://localhost:8000/picture/
-@baseUrl=http://whiteboard.house:8000/picture/
-@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6NDYsIkFjY2VzcyI6dHJ1ZSwiRXhwaXJlIjoxNjA1MTYxNTMyfQ.U6xURgXYTMvakfqmXyrvw5LEht9yEBVrkbxexS4EAr9Jws9SMLi6qzWI_GKqRKT25BJFE7isl7kHdue6oHQg1Q
-
-### Hello World
-GET {{baseUrl}}
-Accept: application/json
+# @baseUrl=http://whiteboard.house:8000/picture/
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDUyNTMwMDF9.smt7an9cRX53e4ihhX2EjDolk9nv9zXmWqFSTBUUMi5iN5HPJzP4jeU0x2CxUyGVktv82iT_feQuSu4W_JoimA
 
 ### Get Picture Lists
 GET {{baseUrl}}
@@ -23,7 +19,7 @@ Authorization: {{auth}}
 {
 	"title": "helloworld",
 	"body":"This is a hello world post",
-    "Img": 8,
+    "Img": 1,
     "lat": 3.44,
     "lng": 1.22,
     "location" : {
@@ -47,13 +43,17 @@ DELETE {{baseUrl}}9
 Authorization: {{auth}}
 
 ### Comment 
-POST {{baseUrl}}1/comment
+POST {{baseUrl}}3/comment
 Accept: application/json
 Authorization: {{auth}}
 
 {
     "message":"I really like this photo!"
 }
+### Delete Commnet, This id is not the picture id, is comment id 
+DELETE  {{baseUrl}}1/comment
+Accept: application/json
+Authorization: {{auth}}
 
 ### 
 # Like and dislike always success unless the backend loss db connection or some edge cases 
@@ -61,12 +61,25 @@ Authorization: {{auth}}
 # Thus, the like count is unique by uid, pictureid and attitute. 
 # The count will be update to elastic search asynchronously
 ### Like 
-POST {{baseUrl}}1/like
+POST {{baseUrl}}3/like
 Accept: application/json
 Authorization: {{auth}}
 
 
 ### Dislike
 POST {{baseUrl}}1/dislike
+Accept: application/json
+Authorization: {{auth}}
+
+### 
+# remove like or dislike are same functions in backend
+# thus, they have same side effects
+### remove dislike 
+DELETE  {{baseUrl}}3/dislike
+Accept: application/json
+Authorization: {{auth}}
+
+### remove like 
+DELETE  {{baseUrl}}3/dislike
 Accept: application/json
 Authorization: {{auth}}

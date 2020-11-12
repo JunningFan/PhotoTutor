@@ -17,9 +17,14 @@ func NewPictureController(srvr *gin.RouterGroup) PictureController {
 
 	srvr.GET("", res.getAll)
 	srvr.POST("", RequrieAuth(res.insert))
+
+	srvr.DELETE(":id/like", RequrieAuth(res.removeLike))
+	srvr.DELETE(":id/dislike", RequrieAuth(res.removeLike))
+
 	srvr.GET(":id", res.getOne)
 	srvr.DELETE(":id", RequrieAuth(res.delete))
 	srvr.POST(":id/comment", RequrieAuth(res.comment))
+	srvr.DELETE(":id/comment", RequrieAuth(res.delComment))
 	srvr.POST(":id/like", RequrieAuth(res.like))
 	srvr.POST(":id/dislike", RequrieAuth(res.dislike))
 
@@ -71,12 +76,21 @@ func (p *PictureController) comment(uid uint, ctx *gin.Context) {
 
 }
 
-func (p *PictureController) like(uid uint, ctx *gin.Context) {
-	id := ctx.Param("id")
-
-	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+func (p *PictureController) delComment(uid uint, ctx *gin.Context) {
+	if cid, err := FetchParamUint("id", ctx); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
-	} else if err := p.pictureManager.Like(uid, uint(idNum)); err != nil {
+	} else if err := p.pictureManager.DelComment(uid, cid); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"data": "you have delete the comment"})
+	}
+}
+
+func (p *PictureController) like(uid uint, ctx *gin.Context) {
+
+	if pid, err := FetchParamUint("id", ctx); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
+	} else if err := p.pictureManager.Like(uid, pid); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"data": "You have successfully like the picture"})
@@ -91,7 +105,18 @@ func (p *PictureController) dislike(uid uint, ctx *gin.Context) {
 	} else if err := p.pictureManager.Dislike(uid, uint(idNum)); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, gin.H{"data": "You have successfully like the picture"})
+		ctx.JSON(http.StatusOK, gin.H{"data": "You have successfully dislike the picture"})
+	}
+}
+
+func (p *PictureController) removeLike(uid uint, ctx *gin.Context) {
+	id := ctx.Param("id")
+	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
+	} else if err := p.pictureManager.RemoveLike(uid, uint(idNum)); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"data": "You removed attititue to the picture"})
 	}
 }
 
