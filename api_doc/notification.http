@@ -1,6 +1,6 @@
 # @baseUrl=http://localhost:8084/
 # @baseUrl=http://localhost:8000/message/
-# @baseUrl=http://whiteboard.house:8000/picture/
+@baseUrl=http://whiteboard.house:8000/message/
 @auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNDQ4MTV9.pr-mH_7xqqjuQ5krOCsugsEyVDq48TRRoiAuZC2KMKu1Nb1JHmer4G1cMF5ZvwMuFYeSJY_HuDYzTZsUOx6p8g
 
 ### Get all this user's notifications
