@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -10,11 +11,13 @@ import (
 
 // Notification of user
 type Notification struct {
-	ID      uint `gorm:"primaryKey"`
-	UID     uint
-	Actor   uint
-	Type    string
-	Message string
+	ID        uint `gorm:"primaryKey"`
+	UID       uint
+	Actor     uint
+	CreatedAt time.Time
+	Avatar    string
+	Type      string
+	Message   string
 }
 
 var (

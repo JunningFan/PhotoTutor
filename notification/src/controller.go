@@ -83,7 +83,7 @@ func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
 		return
 	}
 
-	notification := Notification{UID: input.UID, Type: input.Type, Actor: input.Actor}
+	notification := Notification{UID: input.UID, Type: input.Type, Actor: input.Actor, Avatar: actor.ImgLoc}
 	switch input.Type {
 	case "follow":
 		notification.Message = fmt.Sprintf("%s starts following on you!", actor.Nickname)
