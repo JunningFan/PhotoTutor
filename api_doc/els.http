@@ -71,7 +71,7 @@ Content-Type: application/json
   "query": {
     "bool": {
       "must": {
-       "multi_match":{
+        "multi_match":{
           "query":"helloworld",
           "fields":[
             "Title", "Tags.Name"
