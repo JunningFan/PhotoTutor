@@ -249,7 +249,7 @@ func (p *PictureManager) Dislike(uid, pid uint) error {
 		return res.Error
 	}
 	go p.syncElsVote(pid)
-	go notifyLike(uid, pic.UserID, pic.Title)
+	go notifyDisike(uid, pic.UserID, pic.Title)
 	return nil
 }
 
