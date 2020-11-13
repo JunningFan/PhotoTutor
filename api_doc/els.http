@@ -41,7 +41,7 @@ Content-Type: application/json
   "size": 1,
   "query":{
       "match": {
-          "UserID": 1
+          "UserID": 16
       }
   }
 }
@@ -55,7 +55,7 @@ Content-Type: application/json
   "size": 10,
   "query":{
     "multi_match":{
-      "query":"world",
+      "query":"hello",
       "fields":[
         "Title", "Tags.Name"
       ]
@@ -63,6 +63,38 @@ Content-Type: application/json
   }
 }
 
+### Search
+GET {{baseUrl}}picture/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": {
+       "multi_match":{
+          "query":"helloworld",
+          "fields":[
+            "Title", "Tags.Name"
+          ]
+        }
+      },
+      "filter": {
+        "geo_bounding_box": {
+          "GeoHash": {
+            "top_left": {
+              "lat": 4,
+              "lon": 1
+            },
+            "bottom_right": {
+              "lat": 3,
+              "lon": 2
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 ### Geo base search
 POST {{baseUrl}}picture/_search
@@ -96,7 +128,7 @@ Content-Type: application/json
   "size": 10,
   "query":{
       "match": {
-          "PictureID": 64
+          "PictureID": 106
       }
   }
 }
