@@ -1,4 +1,5 @@
 package src
+
 import (
 	"encoding/json"
 	"fmt"
@@ -29,7 +30,7 @@ func NewClient(authSer string) {
 	if authSer == "" {
 		authSer = "http://localhost:8080/"
 	}
-	authSerAddr = authSer
+	authSerAddr = authSer + "detail/"
 }
 
 func getUserInfo(id uint) (UserInfo, error) {
@@ -37,13 +38,17 @@ func getUserInfo(id uint) (UserInfo, error) {
 	errResp := ErrorResp{}
 	resp, err := http.Get(fmt.Sprintf("%s%d", authSerAddr, id))
 	if err != nil {
+		// fmt.Println("===>>>> 1")
 		return UserInfo{}, err
 	} else if resp.StatusCode != 200 {
 		if bodyBytes, err := ioutil.ReadAll(resp.Body); err != nil {
+			// fmt.Println("===>>>> 2")
 			return UserInfo{}, err
 		} else if err := json.Unmarshal(bodyBytes, &errResp); err != nil {
+			// fmt.Println("===>>>> 3")
 			return UserInfo{}, err
 		} else {
+			// fmt.Println("===>>>> 4")
 			return UserInfo{}, fmt.Errorf(errResp.Error)
 		}
 	} else if bodyBytes, err := ioutil.ReadAll(resp.Body); err != nil {
@@ -60,8 +65,8 @@ func getUserInfo(id uint) (UserInfo, error) {
 // GetImgInfo from remote server
 func GetUserInfo(id uint) (UserInfo, error) {
 	ret, err := getUserInfo(id)
-	if err != nil{
-		err = fmt.Errorf("auth: %s",err.Error() )
+	if err != nil {
+		err = fmt.Errorf("auth: %s", err.Error())
 	}
-	return ret,err
+	return ret, err
 }

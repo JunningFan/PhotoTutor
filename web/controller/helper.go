@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -54,4 +55,11 @@ func RequrieAuth(handler func(uint, *gin.Context)) gin.HandlerFunc {
 			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "bad Token"})
 		}
 	}
+}
+
+// FetchParamUint fetch the value from param list
+func FetchParamUint(name string, ctx *gin.Context) (uint, error) {
+	id := ctx.Param(name)
+	idNum, err := strconv.ParseUint(id, 10, 64)
+	return uint(idNum), err
 }

@@ -3,7 +3,6 @@ package src
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -60,7 +59,7 @@ func NewNotificationController(srvr *gin.RouterGroup) NotificationController {
 	ret := NotificationController{}
 	srvr.GET("/", RequrieAuth(ret.getNotifications))
 	srvr.POST("/", ret.createNewNotification)
-	srvr.DELETE("/:id", RequrieAuth(ret.deletNotifications))
+	srvr.DELETE("/", RequrieAuth(ret.deletNotifications))
 	return ret
 }
 
@@ -68,6 +67,7 @@ type NotificationInput struct {
 	UID   uint
 	Actor uint
 	Type  string
+	Extra string
 }
 
 func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
@@ -83,12 +83,16 @@ func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
 		return
 	}
 
-	notification := Notification{UID: input.UID, Type: input.Type, Actor: input.Actor}
+	notification := Notification{UID: input.UID, Type: input.Type, Actor: input.Actor, Avatar: actor.ImgLoc}
 	switch input.Type {
 	case "follow":
 		notification.Message = fmt.Sprintf("%s starts following on you!", actor.Nickname)
 	case "comment":
-		notification.Message = fmt.Sprintf("%s comment on your post!", actor.Nickname)
+		notification.Message = fmt.Sprintf("%s comment on your picture %s!", actor.Nickname, input.Extra)
+	case "like":
+		notification.Message = fmt.Sprintf("%s like on your picture %s!", actor.Nickname, input.Extra)
+	case "dislike":
+		notification.Message = fmt.Sprintf("%s dislike on your picture %s!", actor.Nickname, input.Extra)
 	}
 
 	if notification, err := CreateMsg(notification); err != nil {
@@ -107,10 +111,7 @@ func (ic *NotificationController) getNotifications(uid uint, ctx *gin.Context) {
 }
 
 func (ic *NotificationController) deletNotifications(uid uint, ctx *gin.Context) {
-	id := ctx.Param("id")
-	if idNum, err := strconv.ParseUint(id, 10, 64); err != nil {
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "The id of image must be string"})
-	} else if err := RemoveMsgList(uid, uint(idNum)); err != nil {
+	if err := RemoveMsgList(uid); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	} else {
 		ctx.JSON(http.StatusOK, gin.H{"data": "you have succcessfully removed notifications"})

@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var conn *gorm.DB
@@ -14,7 +15,9 @@ var conn *gorm.DB
 func Setup() {
 	var err error
 	if util.DB_DSN == "" {
-		conn, err = gorm.Open(sqlite.Open("test.db?parseTime=true"), &gorm.Config{})
+		conn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
 	} else {
 		fmt.Println(util.DB_DSN)
 		//	only support postgres connection
