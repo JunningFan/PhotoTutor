@@ -223,20 +223,34 @@ func (p *PictureManager) DelComment(uid, pid uint) error {
 
 // Like a picture post
 func (p *PictureManager) Like(uid, pid uint) error {
-	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: true})
+	var pic Picture
+	res := conn.Find(&Picture{}).First(&pic, pid)
 	if res.Error != nil {
-		go p.syncElsVote(pid)
+		return res.Error
 	}
-	return res.Error
+	res = conn.Save(&Vote{PictureID: pid, UID: uid, Like: true})
+	if res.Error != nil {
+		return res.Error
+	}
+	go p.syncElsVote(pid)
+	go notifyLike(uid, pic.UserID, pic.Title)
+	return nil
 }
 
 // Dislike a picture post
 func (p *PictureManager) Dislike(uid, pid uint) error {
-	res := conn.Save(&Vote{PictureID: pid, UID: uid, Like: false})
+	var pic Picture
+	res := conn.Find(&Picture{}).First(&pic, pid)
 	if res.Error != nil {
-		go p.syncElsVote(pid)
+		return res.Error
 	}
-	return res.Error
+	res = conn.Save(&Vote{PictureID: pid, UID: uid, Like: false})
+	if res.Error != nil {
+		return res.Error
+	}
+	go p.syncElsVote(pid)
+	go notifyLike(uid, pic.UserID, pic.Title)
+	return nil
 }
 
 // RemoveLike remove hte linking of  like and dislike
@@ -257,6 +271,23 @@ func (p *PictureManager) syncElsVote(pid uint) {
 		fmt.Println("Sync Els Vote Error: ", err)
 	}
 	syncElsPicture(pic)
+}
+
+func notifyLike(actor, to uint, title string) {
+	client.CreateNotification(client.NotificationInput{
+		UID:   to,
+		Actor: actor,
+		Type:  "like",
+		Extra: title,
+	})
+}
+func notifyDisike(actor, to uint, title string) {
+	client.CreateNotification(client.NotificationInput{
+		UID:   to,
+		Actor: actor,
+		Type:  "dislike",
+		Extra: title,
+	})
 }
 
 func notifyComment(actor, to uint) {

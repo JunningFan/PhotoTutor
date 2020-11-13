@@ -68,6 +68,7 @@ type NotificationInput struct {
 	UID   uint
 	Actor uint
 	Type  string
+	Extra string
 }
 
 func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
@@ -88,7 +89,11 @@ func (ic *NotificationController) createNewNotification(ctx *gin.Context) {
 	case "follow":
 		notification.Message = fmt.Sprintf("%s starts following on you!", actor.Nickname)
 	case "comment":
-		notification.Message = fmt.Sprintf("%s comment on your post!", actor.Nickname)
+		notification.Message = fmt.Sprintf("%s comment on your picture %s!", actor.Nickname, input.Extra)
+	case "like":
+		notification.Message = fmt.Sprintf("%s like on your picture %s!", actor.Nickname, input.Extra)
+	case "dislike":
+		notification.Message = fmt.Sprintf("%s dislike on your picture %s!", actor.Nickname, input.Extra)
 	}
 
 	if notification, err := CreateMsg(notification); err != nil {

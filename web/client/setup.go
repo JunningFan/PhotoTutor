@@ -38,6 +38,7 @@ type NotificationInput struct {
 	UID   uint
 	Actor uint
 	Type  string
+	Extra string
 }
 
 // CreateNotification post a notification to remote
