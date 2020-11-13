@@ -1,6 +1,6 @@
-@baseUrl=http://localhost:8081/
+# @baseUrl=http://localhost:8081/
 # @baseUrl=http://localhost:8000/picture/
-# @baseUrl=http://whiteboard.house:8000/picture/
+@baseUrl=http://whiteboard.house:8000/picture/
 @auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MiwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDUyNTMwMDF9.smt7an9cRX53e4ihhX2EjDolk9nv9zXmWqFSTBUUMi5iN5HPJzP4jeU0x2CxUyGVktv82iT_feQuSu4W_JoimA
 
 ### Get Picture Lists

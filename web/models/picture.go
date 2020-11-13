@@ -256,8 +256,6 @@ func (p *PictureManager) syncElsVote(pid uint) {
 	if err != nil {
 		fmt.Println("Sync Els Vote Error: ", err)
 	}
-	// prevent the data in els goes exponentially
-	pic.Votes = nil
 	syncElsPicture(pic)
 }
 

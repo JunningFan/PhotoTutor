@@ -1,13 +1,21 @@
 # @baseUrl=http://localhost:8000/els/
 @baseUrl=http://whiteboard.house:8000/els/
 
+### Get particular doc
+GET  {{baseUrl}}picture/_doc/3
+Content-Type: application/json
+
 ### Get all and pagination
 POST {{baseUrl}}picture/_search
 Content-Type: application/json
 
 {
   "from": 0,
-  "size": 10
+  "size": 10,
+  "sort" : [
+    { "NView" : "desc" },
+    { "NLike" : "desc" }
+  ]
 }
 
 ### Get Picture By User
@@ -92,3 +100,4 @@ Content-Type: application/json
       }
   }
 }
+
