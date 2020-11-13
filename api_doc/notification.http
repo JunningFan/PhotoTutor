@@ -1,8 +1,7 @@
-# @baseUrl=http://localhost:8084/
+@baseUrl=http://localhost:8084/
 # @baseUrl=http://localhost:8000/message/
-@baseUrl=http://whiteboard.house:8000/message/
-@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDQwNDQ4MTV9.pr-mH_7xqqjuQ5krOCsugsEyVDq48TRRoiAuZC2KMKu1Nb1JHmer4G1cMF5ZvwMuFYeSJY_HuDYzTZsUOx6p8g
-
+# @baseUrl=http://whiteboard.house:8000/message/
+@auth=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwiQWNjZXNzIjp0cnVlLCJFeHBpcmUiOjE2MDUzMjkzMzN9.HFKPKGlg2fdJSe5OJxfQE8Ny03BITX1E2qqgxgpJ95FiO16vfu4e9oJ7EA0ufWj7AI6WoR91EmEJC8oxNgfT3w
 ### Get all this user's notifications
 GET {{baseUrl}}
 Accept: application/json
@@ -18,7 +17,7 @@ Accept: application/json
 	"Type": "follow"
 }
 
-### removing a list of notifications 
-DELETE {{baseUrl}}2
+### removing all the notification of a user  
+DELETE {{baseUrl}}
 Accept: application/json
 Authorization: {{auth}}

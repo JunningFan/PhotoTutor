@@ -56,12 +56,12 @@ func CreateMsg(notification Notification) (Notification, error) {
 // GetMsgList get the message list for a user by uid
 func GetMsgList(uid uint) ([]Notification, error) {
 	var ret []Notification
-	res := conn.Where("uid", uid).Find(&ret)
+	res := conn.Order("id desc").Where("uid", uid).Find(&ret)
 	return ret, res.Error
 }
 
 // RemoveMsgList from lastID Before for that user, the record will be deleted
-func RemoveMsgList(uid, lastID uint) error {
-	res := conn.Where("id <= ? AND uid = ?", lastID, uid).Delete(Notification{})
+func RemoveMsgList(uid uint) error {
+	res := conn.Where(" uid = ?", uid).Delete(Notification{})
 	return res.Error
 }
