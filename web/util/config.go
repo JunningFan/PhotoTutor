@@ -26,7 +26,7 @@ func SetUp() {
 	}
 
 	NOTIF_SER = os.Getenv("NOTIF_SER")
-	if IMG_SER == "" {
-		IMG_SER = "http://localhost:8084/"
+	if NOTIF_SER == "" {
+		NOTIF_SER = "http://localhost:8084/"
 	}
 }

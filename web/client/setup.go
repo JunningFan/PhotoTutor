@@ -42,11 +42,12 @@ type NotificationInput struct {
 
 // CreateNotification post a notification to remote
 func CreateNotification(v interface{}) {
-	fmt.Println(util.NOTIF_SER)
 	if jbytes, err := json.Marshal(v); err != nil {
 		log.Printf("Notification Marshal Err: %s\n", err.Error())
 	} else if resp, err := http.Post(util.NOTIF_SER, "application/json", bytes.NewReader(jbytes)); err != nil {
 		log.Printf("Notification Sync Err: %s\n", err.Error())
+	} else if resp.StatusCode != http.StatusOK {
+		log.Printf("Notification Server Err: %s \n", resp.Body)
 	} else if err := resp.Body.Close(); err != nil {
 		log.Printf("Notification Close Fp Err: %s\n", err.Error())
 	}
